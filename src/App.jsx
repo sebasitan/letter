@@ -6,6 +6,7 @@ import OrderForm from './pages/OrderForm'
 import About from './pages/About'
 import Contact from './pages/Contact'
 import Corporate from './pages/Corporate'
+import Reviews from './pages/Reviews'
 import Admin from './pages/Admin'
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
         <Route path="order" element={<OrderForm />} />
         <Route path="about" element={<About />} />
         <Route path="corporate" element={<Corporate />} />
+        <Route path="reviews" element={<Reviews />} />
         <Route path="contact" element={<Contact />} />
       </Route>
     </Routes>

@@ -10,7 +10,7 @@ export default function Navbar() {
     { name: 'Letters', path: '/shop' },
     { name: 'About', path: '/about' },
     { name: 'Corporate', path: '/corporate' },
-    { name: 'Reviews', path: '/#testimonials' },
+    { name: 'Reviews', path: '/reviews' },
     { name: 'Contact', path: '/contact' },
   ]
 

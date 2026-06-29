@@ -113,12 +113,23 @@ export const DEFAULT_TIERS = [
   { id: 'luxe', name: 'Luxe', description: 'Premium paper & ink', price: 999, sort_order: 3 },
 ]
 
+export const DEFAULT_REVIEWS = [
+  { id: 1, name: 'Rahul K.', location: 'Koramangala, Bangalore', rating: 5, letter_type: 'Love Letter', sort_order: 1, quote: 'My wife cried when she opened it. She said nobody had ever taken that kind of time to say those things. I just gave them the feelings — they found the words.' },
+  { id: 2, name: 'Ananya S.', location: 'Indiranagar, Bangalore', rating: 5, letter_type: 'Healing Letter', sort_order: 2, quote: 'The closure letter was the most healing thing I did for myself this year. Reading it made me feel finally understood.' },
+  { id: 3, name: 'Meera R.', location: 'Whitefield, Bangalore', rating: 5, letter_type: 'Birthday Letter', sort_order: 3, quote: 'Their same-day service is a lifesaver. The birthday letter for my sister reached in time and made her day so special!' },
+]
+
 const TABLE_DEFAULTS = {
   letter_types: DEFAULT_LETTERS,
   gifts: DEFAULT_GIFTS,
   paper_types: DEFAULT_PAPERS,
   ink_colors: DEFAULT_INKS,
   gift_tiers: DEFAULT_TIERS,
+  reviews: DEFAULT_REVIEWS,
+}
+
+export async function fetchReviews() {
+  return fetchActive('reviews', DEFAULT_REVIEWS)
 }
 
 // ── Public fetch: active rows, sorted; falls back to defaults ──

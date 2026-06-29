@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { fetchCatalog, DEFAULT_LETTERS } from '../lib/products'
+import { fetchCatalog, DEFAULT_LETTERS, fetchReviews, DEFAULT_REVIEWS } from '../lib/products'
 
 // Emotion-based accent per letter type (visible tint + defined border)
 const letterAccents = {
@@ -688,29 +688,10 @@ function HowItWorks() {
 
 // Testimonials Section
 function Testimonials() {
-  const testimonials = [
-    {
-      rating: 5,
-      quote: "My wife cried when she opened it. She said nobody had ever taken that kind of time to say those things. I just gave him the feelings — they found the words.",
-      name: 'Rahul K.',
-      location: 'Koramangala, Bangalore',
-      type: 'LOVE LETTER',
-    },
-    {
-      rating: 5,
-      quote: "The closure letter was the most healing thing I did for myself this year. Reading it made me feel finally understood.",
-      name: 'Ananya S.',
-      location: 'Indiranagar, Bangalore',
-      type: 'HEALING LETTER',
-    },
-    {
-      rating: 5,
-      quote: "Their same-day service is a lifesaver. The birthday letter for my sister reached in time and made her day so special!",
-      name: 'Meera R.',
-      location: 'Whitefield, Bangalore',
-      type: 'BIRTHDAY LETTER',
-    },
-  ]
+  const [reviews, setReviews] = useState(DEFAULT_REVIEWS)
+  useEffect(() => {
+    fetchReviews().then((r) => setReviews(r.slice(0, 3))).catch(() => {})
+  }, [])
 
   return (
     <section id="testimonials" className="section-padding bg-cream-100">
@@ -727,27 +708,33 @@ function Testimonials() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
-          {testimonials.map((testimonial, i) => (
-            <div key={i} className="card">
+          {reviews.map((t) => (
+            <div key={t.id} className="card">
               <div className="flex gap-1 mb-4">
-                {[...Array(testimonial.rating)].map((_, j) => (
+                {[...Array(t.rating || 5)].map((_, j) => (
                   <span key={j} className="text-gold">★</span>
                 ))}
               </div>
               <p className="font-playfair italic text-ink leading-relaxed mb-6">
-                "{testimonial.quote}"
+                "{t.quote}"
               </p>
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-semibold text-ink">{testimonial.name}</h4>
-                  <p className="text-sm text-ink/60">{testimonial.location}</p>
+                  <h4 className="font-semibold text-ink">{t.name}</h4>
+                  <p className="text-sm text-ink/60">{t.location}</p>
                 </div>
                 <span className="text-xs font-medium text-rust uppercase">
-                  {testimonial.type}
+                  {t.letter_type}
                 </span>
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="text-center mt-10">
+          <Link to="/reviews" className="text-sm font-semibold" style={{ color: '#9D4433' }}>
+            Read all reviews →
+          </Link>
         </div>
       </div>
     </section>

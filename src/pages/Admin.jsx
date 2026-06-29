@@ -203,14 +203,14 @@ function Dashboard({ onSignOut }) {
 
         {/* Tabs */}
         <div className="flex gap-2 mb-5 flex-wrap">
-          {[['orders', `Orders (${orders.length})`], ['corporate', `Corporate (${enquiries.length})`], ['products', 'Products']].map(([id, label]) => (
+          {[['orders', `Orders (${orders.length})`], ['corporate', `Corporate (${enquiries.length})`], ['products', 'Products'], ['reviews', 'Reviews']].map(([id, label]) => (
             <button key={id} onClick={() => setTab(id)}
               className="px-4 py-2 rounded-full text-sm font-medium"
               style={tab === id ? { backgroundColor: '#9D4433', color: 'white' } : { backgroundColor: '#F0E6DC', color: '#5C3A2E' }}>
               {label}
             </button>
           ))}
-          {tab !== 'products' && (
+          {tab !== 'products' && tab !== 'reviews' && (
             <button onClick={load} className="ml-auto px-4 py-2 rounded-full text-sm" style={{ border: '1px solid #E3D5C8', color: '#5C3A2E' }}>
               ↻ Refresh
             </button>
@@ -229,6 +229,7 @@ function Dashboard({ onSignOut }) {
             : <p style={{ color: '#A8968C' }}>No corporate enquiries yet.</p>
         )}
         {tab === 'products' && <ProductsManager />}
+        {tab === 'reviews' && <ProductsManager only="reviews" />}
       </div>
     </div>
   )

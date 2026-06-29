@@ -72,9 +72,21 @@ const SCHEMAS = {
       { k: 'is_active', label: 'Active', type: 'bool' },
     ],
   },
+  reviews: {
+    label: 'Reviews', idKey: 'id', autoId: true,
+    fields: [
+      { k: 'name', label: 'Customer name', type: 'text' },
+      { k: 'location', label: 'Location', type: 'text' },
+      { k: 'rating', label: 'Rating (1–5)', type: 'number' },
+      { k: 'letter_type', label: 'Letter type (label)', type: 'text' },
+      { k: 'quote', label: 'Review text', type: 'textarea' },
+      { k: 'sort_order', label: 'Sort order', type: 'number' },
+      { k: 'is_active', label: 'Show on site', type: 'bool' },
+    ],
+  },
 }
 
-const TABLES = Object.keys(SCHEMAS)
+const PRODUCT_TABLES = ['letter_types', 'gifts', 'paper_types', 'ink_colors', 'gift_tiers']
 const inputStyle = { border: '1px solid #E3D5C8', color: '#3D1A1A' }
 const inputCls = 'w-full px-3 py-2 rounded-lg bg-white outline-none text-sm'
 
@@ -82,7 +94,11 @@ const inputCls = 'w-full px-3 py-2 rounded-lg bg-white outline-none text-sm'
 function emptyRow(table) {
   const r = {}
   for (const f of SCHEMAS[table].fields) {
-    r[f.k] = f.type === 'bool' ? (f.k === 'is_active') : f.type === 'number' ? 0 : f.type === 'list' ? [] : f.type === 'accent' ? { tint: '#FBE3DB', icon: '#B5593A', border: '#E2A18E', glow: 'rgba(0,0,0,0.2)' } : ''
+    r[f.k] = f.type === 'bool' ? (f.k === 'is_active')
+      : f.type === 'number' ? (f.k === 'rating' ? 5 : 0)
+      : f.type === 'list' ? []
+      : f.type === 'accent' ? { tint: '#FBE3DB', icon: '#B5593A', border: '#E2A18E', glow: 'rgba(0,0,0,0.2)' }
+      : ''
   }
   return r
 }
@@ -158,8 +174,9 @@ function EditForm({ table, row, onSave, onCancel, isNew }) {
   )
 }
 
-export default function ProductsManager() {
-  const [table, setTable] = useState('letter_types')
+export default function ProductsManager({ only }) {
+  const tables = only ? [only] : PRODUCT_TABLES
+  const [table, setTable] = useState(tables[0])
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -196,16 +213,18 @@ export default function ProductsManager() {
 
   return (
     <div>
-      {/* Sub-tabs */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {TABLES.map((t) => (
-          <button key={t} onClick={() => setTable(t)}
-            className="px-3 py-1.5 rounded-full text-sm font-medium"
-            style={table === t ? { backgroundColor: '#451A1C', color: '#E0A93C' } : { backgroundColor: '#F0E6DC', color: '#5C3A2E' }}>
-            {SCHEMAS[t].label}
-          </button>
-        ))}
-      </div>
+      {/* Sub-tabs (hidden when managing a single table) */}
+      {tables.length > 1 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {tables.map((t) => (
+            <button key={t} onClick={() => setTable(t)}
+              className="px-3 py-1.5 rounded-full text-sm font-medium"
+              style={table === t ? { backgroundColor: '#451A1C', color: '#E0A93C' } : { backgroundColor: '#F0E6DC', color: '#5C3A2E' }}>
+              {SCHEMAS[t].label}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="flex items-center justify-between mb-3">
         <p className="text-sm" style={{ color: '#A8968C' }}>{rows.length} item{rows.length !== 1 ? 's' : ''}</p>
@@ -225,10 +244,16 @@ export default function ProductsManager() {
       {!loading && rows.map((row) => (
         <div key={row[schema.idKey]} className="bg-white rounded-xl p-4 mb-2 flex items-center justify-between gap-3" style={{ border: '1px solid #F0E6DC', opacity: row.is_active ? 1 : 0.55 }}>
           <div className="flex items-center gap-3 min-w-0">
-            <span className="text-lg">{row.emoji || '•'}</span>
+            <span className="text-lg">{row.emoji || (row.rating ? '★' : '•')}</span>
             <div className="min-w-0">
               <p className="font-semibold text-sm truncate" style={{ color: '#3D1A1A' }}>{row.name}</p>
-              <p className="text-xs" style={{ color: '#A8968C' }}>{row[schema.idKey]} · ₹{row.price}</p>
+              <p className="text-xs truncate" style={{ color: '#A8968C' }}>
+                {[
+                  row.price != null && `₹${row.price}`,
+                  row.rating != null && `${row.rating}★`,
+                  row.letter_type || row.location,
+                ].filter(Boolean).join(' · ') || row[schema.idKey]}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
