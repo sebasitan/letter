@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
+import ScrollToTop from './components/ScrollToTop'
 import Home from './pages/Home'
 import Shop from './pages/Shop'
 import OrderForm from './pages/OrderForm'
@@ -12,6 +13,8 @@ import Admin from './pages/Admin'
 
 function App() {
   return (
+    <>
+    <ScrollToTop />
     <Routes>
       {/* Admin — standalone, no public navbar/footer */}
       <Route path="/admin" element={<Admin />} />
@@ -27,6 +30,7 @@ function App() {
         <Route path="contact" element={<Contact />} />
       </Route>
     </Routes>
+    </>
   )
 }
 
