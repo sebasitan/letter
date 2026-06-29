@@ -84,6 +84,16 @@ const SCHEMAS = {
       { k: 'is_active', label: 'Show on site', type: 'bool' },
     ],
   },
+  faqs: {
+    label: 'FAQs', idKey: 'id', autoId: true,
+    fields: [
+      { k: 'question', label: 'Question', type: 'textarea' },
+      { k: 'answer', label: 'Answer', type: 'textarea' },
+      { k: 'category', label: 'Category (e.g. Ordering, Delivery)', type: 'text' },
+      { k: 'sort_order', label: 'Sort order', type: 'number' },
+      { k: 'is_active', label: 'Show on site', type: 'bool' },
+    ],
+  },
 }
 
 const PRODUCT_TABLES = ['letter_types', 'gifts', 'paper_types', 'ink_colors', 'gift_tiers']
@@ -198,7 +208,7 @@ export default function ProductsManager({ only }) {
     load()
   }
   const onDelete = async (row) => {
-    if (!confirm(`Delete "${row.name}"? This cannot be undone.`)) return
+    if (!confirm(`Delete "${row.name || row.question}"? This cannot be undone.`)) return
     await adminDelete(table, schema.idKey, row[schema.idKey])
     load()
   }
@@ -246,7 +256,7 @@ export default function ProductsManager({ only }) {
           <div className="flex items-center gap-3 min-w-0">
             <span className="text-lg">{row.emoji || (row.rating ? '★' : '•')}</span>
             <div className="min-w-0">
-              <p className="font-semibold text-sm truncate" style={{ color: '#3D1A1A' }}>{row.name}</p>
+              <p className="font-semibold text-sm truncate" style={{ color: '#3D1A1A' }}>{row.name || row.question}</p>
               <p className="text-xs truncate" style={{ color: '#A8968C' }}>
                 {[
                   row.price != null && `₹${row.price}`,

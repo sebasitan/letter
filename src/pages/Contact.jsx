@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
+import { fetchFaqs, DEFAULT_FAQS } from '../lib/products'
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -65,24 +67,10 @@ export default function Contact() {
     },
   ]
 
-  const faqs = [
-    {
-      q: 'How long does it take to receive my letter?',
-      a: 'For Bangalore, we offer same-day delivery. For other cities, expect 3-5 business days via India Post.',
-    },
-    {
-      q: 'Can I see the letter before it\'s sent?',
-      a: 'Yes! We send you a typed draft for approval before writing the final calligraphy version. One free revision is included.',
-    },
-    {
-      q: 'What if I don\'t know what to say?',
-      a: 'That\'s our specialty! Just tell us the feeling, some memories, and the relationship — we\'ll craft the perfect words.',
-    },
-    {
-      q: 'Is my message kept private?',
-      a: 'Absolutely. We never store, share, or reuse your messages. Complete confidentiality is our promise.',
-    },
-  ]
+  const [faqs, setFaqs] = useState(DEFAULT_FAQS.slice(0, 4))
+  useEffect(() => {
+    fetchFaqs().then((f) => setFaqs(f.slice(0, 4))).catch(() => {})
+  }, [])
 
   if (submitted) {
     return (
@@ -275,12 +263,17 @@ export default function Contact() {
             Frequently Asked <span className="italic" style={{ color: '#C49A2E' }}>Questions</span>
           </h2>
           <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {faqs.map((faq, i) => (
-              <div key={i} className="card">
-                <h3 className="font-semibold text-ink mb-2">{faq.q}</h3>
-                <p className="text-sm text-ink/60">{faq.a}</p>
+            {faqs.map((faq) => (
+              <div key={faq.id} className="card">
+                <h3 className="font-semibold text-ink mb-2">{faq.question}</h3>
+                <p className="text-sm text-ink/60">{faq.answer}</p>
               </div>
             ))}
+          </div>
+          <div className="text-center mt-8">
+            <Link to="/faq" className="text-sm font-semibold" style={{ color: '#9D4433' }}>
+              See all questions →
+            </Link>
           </div>
         </div>
       </section>

@@ -119,6 +119,19 @@ export const DEFAULT_REVIEWS = [
   { id: 3, name: 'Meera R.', location: 'Whitefield, Bangalore', rating: 5, letter_type: 'Birthday Letter', sort_order: 3, quote: 'Their same-day service is a lifesaver. The birthday letter for my sister reached in time and made her day so special!' },
 ]
 
+export const DEFAULT_FAQS = [
+  { id: 1, category: 'Ordering', sort_order: 1, question: 'How long does it take to receive my letter?', answer: 'For Bangalore, we offer same-day delivery. For other cities, expect 3–5 business days via India Post.' },
+  { id: 2, category: 'Ordering', sort_order: 2, question: "Can I see the letter before it's sent?", answer: 'Yes! We send you a typed draft for approval before writing the final calligraphy version. One free revision is included.' },
+  { id: 3, category: 'Ordering', sort_order: 3, question: "What if I don't know what to say?", answer: "That's our specialty. Just tell us the feeling, a few memories, and the relationship — we'll craft the perfect words." },
+  { id: 4, category: 'Personalisation', sort_order: 4, question: 'Can I write the letter in my own language?', answer: 'Absolutely — English, Tamil, Hindi, Kannada and Telugu. You can type phonetically (e.g. "vanakkam" → வணக்கம்) or use the voice button to speak it.' },
+  { id: 5, category: 'Personalisation', sort_order: 5, question: 'Can I choose the paper and ink?', answer: 'Yes — pick from several premium papers and ink colours (including metallic gold) right in the order form.' },
+  { id: 6, category: 'Personalisation', sort_order: 6, question: 'Is my message kept private?', answer: 'Always. We never store, share or reuse your messages. Complete confidentiality is our promise.' },
+  { id: 7, category: 'Delivery', sort_order: 7, question: 'Where do you deliver?', answer: 'Same-day across Bangalore via Dunzo / Porter, and PAN-India via India Post.' },
+  { id: 8, category: 'Delivery', sort_order: 8, question: 'Can you keep it a surprise?', answer: "Yes — at checkout you can ask us to contact you instead of the recipient, so the surprise stays intact." },
+  { id: 9, category: 'Payment & Bulk', sort_order: 9, question: 'How do I pay?', answer: 'We accept UPI and confirm orders over WhatsApp. Secure and simple.' },
+  { id: 10, category: 'Payment & Bulk', sort_order: 10, question: 'Do you do corporate or bulk orders?', answer: 'Yes! Employee birthdays, festivals, client gifting and more — with volume pricing. Visit our Corporate page for a custom quote.' },
+]
+
 const TABLE_DEFAULTS = {
   letter_types: DEFAULT_LETTERS,
   gifts: DEFAULT_GIFTS,
@@ -126,10 +139,15 @@ const TABLE_DEFAULTS = {
   ink_colors: DEFAULT_INKS,
   gift_tiers: DEFAULT_TIERS,
   reviews: DEFAULT_REVIEWS,
+  faqs: DEFAULT_FAQS,
 }
 
 export async function fetchReviews() {
   return fetchActive('reviews', DEFAULT_REVIEWS)
+}
+
+export async function fetchFaqs() {
+  return fetchActive('faqs', DEFAULT_FAQS)
 }
 
 // ── Public fetch: active rows, sorted; falls back to defaults ──
