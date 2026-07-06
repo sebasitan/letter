@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchFaqs, DEFAULT_FAQS } from '../lib/products'
+import Seo from '../components/Seo'
 
 function AccordionItem({ q, a, open, onToggle }) {
   return (
@@ -72,6 +73,7 @@ export default function Faq() {
 
   return (
     <div style={{ backgroundColor: '#FBF6F0' }} className="min-h-screen">
+      <Seo title="FAQs" description="Answers about ordering, delivery, personalisation, languages and payment for Akshar Studio handwritten letters & gifts." path="/faq" />
       {/* Hero */}
       <section style={{ backgroundColor: '#451A1C' }} className="py-16 md:py-20">
         <div className="max-w-2xl mx-auto px-6 text-center">

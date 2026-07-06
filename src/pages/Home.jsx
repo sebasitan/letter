@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchCatalog, DEFAULT_LETTERS, fetchReviews, DEFAULT_REVIEWS } from '../lib/products'
+import Seo from '../components/Seo'
 
 // Emotion-based accent per letter type (visible tint + defined border)
 const letterAccents = {
@@ -792,6 +793,11 @@ function CTA() {
 export default function Home() {
   return (
     <>
+      <Seo
+        title="Handwritten Letters & Curated Gifts in Bangalore"
+        description="Akshar Studio writes heartfelt handwritten calligraphy letters on parchment, paired with curated gifts — love, healing, birthday, apology & family letters. Same-day delivery in Bangalore."
+        path="/"
+      />
       <Hero />
       <Marquee />
       <Letters />

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { createOrder } from '../lib/supabase'
 import { fetchCatalog, DEFAULT_LETTERS, DEFAULT_GIFTS, DEFAULT_PAPERS, DEFAULT_INKS, DEFAULT_TIERS } from '../lib/products'
+import Seo from '../components/Seo'
 
 // ── Per-letter-type content so the form feels tailored ──────────────
 // Product data (letter types, tiers, paper, ink, gifts) is loaded from
@@ -410,6 +411,11 @@ export default function OrderForm() {
 
   return (
     <div style={{ backgroundColor: '#FBF6F0' }} className="min-h-screen">
+      <Seo
+        title="Order a Handwritten Letter"
+        description="Create your personalised handwritten letter — choose paper & ink, add a gift, write in your language. Free draft approval before we write. Same-day delivery in Bangalore."
+        path="/order"
+      />
       <section className="py-12 md:py-16 pb-28 lg:pb-16">
         <div className="max-w-6xl mx-auto px-4">
 

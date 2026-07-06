@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import Seo from '../components/Seo'
 
 const values = [
   {
@@ -44,6 +45,7 @@ const skills = ['Calligraphy', 'Hand Lettering', 'Wax Sealing', 'Gift Curation',
 export default function About() {
   return (
     <div style={{ backgroundColor: '#FBF6F0' }} className="min-h-screen">
+      <Seo title="About Us" description="The story of Akshar Studio — handwritten calligraphy letters made with heart in Bangalore. Words, handwriting, emotions." path="/about" />
       {/* Hero */}
       <section className="py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-6">

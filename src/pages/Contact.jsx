@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchFaqs, DEFAULT_FAQS } from '../lib/products'
+import Seo from '../components/Seo'
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -96,6 +97,7 @@ export default function Contact() {
 
   return (
     <div className="bg-cream-100 min-h-screen">
+      <Seo title="Contact Us" description="Questions or a custom order? Reach Akshar Studio on WhatsApp — Bangalore handwritten letters & personalised gifting." path="/contact" />
       {/* Header */}
       <section className="section-padding pb-8">
         <div className="container-custom text-center">

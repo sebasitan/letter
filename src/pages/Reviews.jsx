@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchReviews, DEFAULT_REVIEWS } from '../lib/products'
+import Seo from '../components/Seo'
 
 function Stars({ n = 5 }) {
   return <span className="flex gap-0.5">{[...Array(n)].map((_, i) => <span key={i} style={{ color: '#C49A2E' }}>★</span>)}</span>
@@ -19,6 +20,7 @@ export default function Reviews() {
 
   return (
     <div style={{ backgroundColor: '#FBF6F0' }} className="min-h-screen">
+      <Seo title="Reviews" description="Real reactions from customers who finally found the words they couldn't say. Read Akshar Studio handwritten-letter reviews." path="/reviews" />
       {/* Hero */}
       <section style={{ backgroundColor: '#451A1C' }} className="py-16 md:py-20">
         <div className="max-w-3xl mx-auto px-6 text-center">

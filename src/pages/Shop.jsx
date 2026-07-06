@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchCatalog, DEFAULT_LETTERS, DEFAULT_TIERS } from '../lib/products'
+import Seo from '../components/Seo'
 
 const icons = {
   love: (
@@ -152,6 +153,11 @@ export default function Shop() {
 
   return (
     <div style={{ backgroundColor: '#FBF6F0' }} className="min-h-screen">
+      <Seo
+        title="Our Letters — Love, Healing, Birthday & More"
+        description="Browse handwritten letter types — love, breakup/healing, birthday, apology, family & mystery boxes. Personalised, wax-sealed, delivered across India."
+        path="/shop"
+      />
       {/* Header */}
       <section className="pt-14 pb-6">
         <div className="max-w-7xl mx-auto px-6">

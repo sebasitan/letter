@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { createCorporateEnquiry } from '../lib/supabase'
+import Seo from '../components/Seo'
 
 const useCases = [
   { icon: '🎂', title: 'Birthdays & Anniversaries', desc: 'Celebrate every employee’s special day with a handwritten note.' },
@@ -91,6 +92,11 @@ export default function Corporate() {
 
   return (
     <div style={{ backgroundColor: '#FBF6F0' }} className="min-h-screen">
+      <Seo
+        title="Corporate & Bulk Gifting"
+        description="Handwritten letters & curated gifts for teams — employee birthdays, festivals, client appreciation, onboarding. Custom volume pricing. Request a quote."
+        path="/corporate"
+      />
       {/* Hero */}
       <section style={{ backgroundColor: '#451A1C' }} className="py-16 md:py-20">
         <div className="max-w-3xl mx-auto px-6 text-center">
