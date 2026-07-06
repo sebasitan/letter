@@ -127,8 +127,8 @@ function EditForm({ table, row, onSave, onCancel, isNew }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto" style={{ backgroundColor: 'rgba(46,20,21,0.6)' }} onClick={onCancel}>
-      <div className="bg-white rounded-2xl p-6 w-full max-w-lg my-8" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto" style={{ backgroundColor: 'rgba(46,20,21,0.6)' }}>
+      <div className="bg-white rounded-2xl p-6 w-full max-w-lg my-8">
         <h3 className="font-playfair text-xl font-bold mb-4" style={{ color: '#3D1A1A' }}>{isNew ? 'Add' : 'Edit'} {SCHEMAS[table].label}</h3>
         <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
           {SCHEMAS[table].fields.map((f) => {
