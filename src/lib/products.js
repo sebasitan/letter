@@ -151,11 +151,11 @@ export async function fetchFaqs() {
 }
 
 // ── Public fetch: active rows, sorted; falls back to defaults ──
-async function fetchActive(table, defaults) {
+async function fetchActive(table, defaults, columns = '*') {
   try {
     const { data, error } = await supabase
       .from(table)
-      .select('*')
+      .select(columns)
       .eq('is_active', true)
       .order('sort_order', { ascending: true })
     if (error || !data || data.length === 0) return defaults
@@ -165,10 +165,13 @@ async function fetchActive(table, defaults) {
   }
 }
 
+// Customer-safe gift columns (never exposes cost_price / supplier / source_url)
+const GIFT_PUBLIC_COLS = 'id,name,description,price,emoji,image,personalised,is_active,sort_order'
+
 export async function fetchCatalog() {
   const [letters, gifts, papers, inks, tiers] = await Promise.all([
     fetchActive('letter_types', DEFAULT_LETTERS),
-    fetchActive('gifts', DEFAULT_GIFTS),
+    fetchActive('gifts', DEFAULT_GIFTS, GIFT_PUBLIC_COLS),
     fetchActive('paper_types', DEFAULT_PAPERS),
     fetchActive('ink_colors', DEFAULT_INKS),
     fetchActive('gift_tiers', DEFAULT_TIERS),

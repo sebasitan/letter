@@ -30,10 +30,13 @@ const SCHEMAS = {
       { k: 'id', label: 'Slug / ID', type: 'text', addOnly: true },
       { k: 'name', label: 'Name', type: 'text' },
       { k: 'description', label: 'Description', type: 'text' },
-      { k: 'price', label: 'Price (₹)', type: 'number' },
+      { k: 'price', label: 'Selling price (₹)', type: 'number' },
       { k: 'emoji', label: 'Emoji', type: 'text' },
       { k: 'image', label: 'Image URL', type: 'text' },
       { k: 'personalised', label: 'Personalised', type: 'bool' },
+      { k: 'cost_price', label: '🔒 Cost price (₹) — admin only', type: 'number' },
+      { k: 'supplier', label: '🔒 Supplier — admin only', type: 'text' },
+      { k: 'source_url', label: '🔒 Buy link / source URL — admin only', type: 'text' },
       { k: 'sort_order', label: 'Sort order', type: 'number' },
       { k: 'is_active', label: 'Active', type: 'bool' },
     ],
@@ -260,6 +263,8 @@ export default function ProductsManager({ only }) {
               <p className="text-xs truncate" style={{ color: '#A8968C' }}>
                 {[
                   row.price != null && `₹${row.price}`,
+                  row.cost_price != null && `cost ₹${row.cost_price}`,
+                  (row.price != null && row.cost_price != null) && `margin ₹${row.price - row.cost_price}`,
                   row.rating != null && `${row.rating}★`,
                   row.letter_type || row.location,
                 ].filter(Boolean).join(' · ') || row[schema.idKey]}
@@ -267,6 +272,9 @@ export default function ProductsManager({ only }) {
             </div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
+            {row.source_url && (
+              <a href={row.source_url} target="_blank" rel="noopener noreferrer" className="text-xs px-2.5 py-1 rounded-full" style={{ backgroundColor: '#EAF1EC', color: '#2E7D52' }}>Buy ↗</a>
+            )}
             <button onClick={() => onToggle(row)} className="text-xs px-2.5 py-1 rounded-full"
               style={row.is_active ? { backgroundColor: '#E5F0E8', color: '#2E7D52' } : { backgroundColor: '#F0E6DC', color: '#A8968C' }}>
               {row.is_active ? 'Active' : 'Hidden'}
