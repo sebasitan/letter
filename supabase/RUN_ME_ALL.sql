@@ -157,12 +157,12 @@ alter table public.order_leads enable row level security;
 
 drop policy if exists "Admin read leads" on public.order_leads;
 create policy "Admin read leads" on public.order_leads for select to authenticated
-  using ( (auth.jwt() ->> 'email') = 'sebas.stllioni@gmail.com' );
+  using ( (auth.jwt() ->> 'email') = 'sebas.stallioni@gmail.com' );
 
 drop policy if exists "Admin update leads" on public.order_leads;
 create policy "Admin update leads" on public.order_leads for update to authenticated
-  using ( (auth.jwt() ->> 'email') = 'sebas.stllioni@gmail.com' )
-  with check ( (auth.jwt() ->> 'email') = 'sebas.stllioni@gmail.com' );
+  using ( (auth.jwt() ->> 'email') = 'sebas.stallioni@gmail.com' )
+  with check ( (auth.jwt() ->> 'email') = 'sebas.stallioni@gmail.com' );
 
 create index if not exists order_leads_open_idx
   on public.order_leads (converted, created_at desc);

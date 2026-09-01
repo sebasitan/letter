@@ -73,6 +73,6 @@ begin
     execute format('drop policy if exists "%s_public_read" on public.%I', t, t);
     execute format('create policy "%s_public_read" on public.%I for select using (is_active = true)', t, t);
     execute format('drop policy if exists "%s_admin_all" on public.%I', t, t);
-    execute format($f$create policy "%s_admin_all" on public.%I for all to authenticated using ((auth.jwt() ->> 'email') = 'sebas.stllioni@gmail.com') with check ((auth.jwt() ->> 'email') = 'sebas.stllioni@gmail.com')$f$, t, t);
+    execute format($f$create policy "%s_admin_all" on public.%I for all to authenticated using ((auth.jwt() ->> 'email') = 'sebas.stallioni@gmail.com') with check ((auth.jwt() ->> 'email') = 'sebas.stallioni@gmail.com')$f$, t, t);
   end loop;
 end $$;
