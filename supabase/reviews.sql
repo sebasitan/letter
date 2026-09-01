@@ -23,5 +23,5 @@ create policy "reviews_public_read" on public.reviews
 drop policy if exists "reviews_admin_all" on public.reviews;
 create policy "reviews_admin_all" on public.reviews
   for all to authenticated
-  using ((auth.jwt() ->> 'email') = 'sebas.stallioni@gmail.com')
-  with check ((auth.jwt() ->> 'email') = 'sebas.stallioni@gmail.com');
+  using ((auth.jwt() ->> 'email') = 'sebas.stllioni@gmail.com')
+  with check ((auth.jwt() ->> 'email') = 'sebas.stllioni@gmail.com');

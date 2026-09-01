@@ -21,5 +21,5 @@ create policy "faqs_public_read" on public.faqs
 drop policy if exists "faqs_admin_all" on public.faqs;
 create policy "faqs_admin_all" on public.faqs
   for all to authenticated
-  using ((auth.jwt() ->> 'email') = 'sebas.stallioni@gmail.com')
-  with check ((auth.jwt() ->> 'email') = 'sebas.stallioni@gmail.com');
+  using ((auth.jwt() ->> 'email') = 'sebas.stllioni@gmail.com')
+  with check ((auth.jwt() ->> 'email') = 'sebas.stllioni@gmail.com');

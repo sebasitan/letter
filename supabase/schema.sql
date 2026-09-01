@@ -79,18 +79,18 @@ create index if not exists corporate_enquiries_created_at_idx
 -- ============================================================
 drop policy if exists "Admin read orders" on public.orders;
 create policy "Admin read orders" on public.orders for select to authenticated
-  using ( (auth.jwt() ->> 'email') = 'sebas.stallioni@gmail.com' );
+  using ( (auth.jwt() ->> 'email') = 'sebas.stllioni@gmail.com' );
 
 drop policy if exists "Admin update orders" on public.orders;
 create policy "Admin update orders" on public.orders for update to authenticated
-  using ( (auth.jwt() ->> 'email') = 'sebas.stallioni@gmail.com' )
-  with check ( (auth.jwt() ->> 'email') = 'sebas.stallioni@gmail.com' );
+  using ( (auth.jwt() ->> 'email') = 'sebas.stllioni@gmail.com' )
+  with check ( (auth.jwt() ->> 'email') = 'sebas.stllioni@gmail.com' );
 
 drop policy if exists "Admin read enquiries" on public.corporate_enquiries;
 create policy "Admin read enquiries" on public.corporate_enquiries for select to authenticated
-  using ( (auth.jwt() ->> 'email') = 'sebas.stallioni@gmail.com' );
+  using ( (auth.jwt() ->> 'email') = 'sebas.stllioni@gmail.com' );
 
 drop policy if exists "Admin update enquiries" on public.corporate_enquiries;
 create policy "Admin update enquiries" on public.corporate_enquiries for update to authenticated
-  using ( (auth.jwt() ->> 'email') = 'sebas.stallioni@gmail.com' )
-  with check ( (auth.jwt() ->> 'email') = 'sebas.stallioni@gmail.com' );
+  using ( (auth.jwt() ->> 'email') = 'sebas.stllioni@gmail.com' )
+  with check ( (auth.jwt() ->> 'email') = 'sebas.stllioni@gmail.com' );
