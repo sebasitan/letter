@@ -1,18 +1,23 @@
 -- ============================================================
--- Ever Yours — repoint every admin policy at the correct email
+-- Ever Yours — point every admin policy at the admin account
 -- Run in Supabase: SQL Editor → New query → paste → Run
 --
--- WHY: the policies were created comparing the JWT email against
--- 'sebas.stllioni@gmail.com' — missing the 'a'. Signing in worked, but
--- every admin list came back empty because no row ever matched. This
--- drops and recreates them against the real address.
+-- The admin account is sebas.stllioni@gmail.com. That spelling looks
+-- like a typo and isn't — it is the real address the Supabase Auth user
+-- was created with, so every RLS policy must match it exactly.
 --
--- Safe to re-run. Change ADMIN_EMAIL below if the account ever moves.
+-- Getting this wrong fails SILENTLY: sign-in still succeeds, but every
+-- admin list (orders, enquiries, catalog, reviews, FAQs, leads) comes
+-- back empty because no row ever matches the policy.
+--
+-- Safe to re-run, and safe to run even if the policies are already
+-- correct. If the admin account ever moves, change admin_email below
+-- and re-run — that is the only edit needed.
 -- ============================================================
 
 do $$
 declare
-  admin_email constant text := 'sebas.stallioni@gmail.com';
+  admin_email constant text := 'sebas.stllioni@gmail.com';
   t text;
 begin
   -- ── Orders ───────────────────────────────────────────────
@@ -57,8 +62,8 @@ end $$;
 -- VERIFY — every row should say OK
 -- ============================================================
 select tablename || ' / ' || policyname as policy,
-       case when qual like '%sebas.stallioni@gmail.com%' then 'OK'
-            else 'FAIL — still points elsewhere' end as result
+       case when qual like '%sebas.stllioni@gmail.com%' then 'OK'
+            else 'FAIL — points at the wrong address' end as result
 from pg_policies
 where schemaname = 'public'
   and qual like '%auth.jwt%email%'
