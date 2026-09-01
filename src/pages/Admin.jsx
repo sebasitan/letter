@@ -3,6 +3,7 @@ import {
   signIn, signOut, getSession, onAuthChange,
   getOrders, updateOrderStatus, updateOrderStatusBulk, updateOrderNotes,
   getCorporateEnquiries,
+  getUser, changePassword, signOutEverywhere,
 } from '../lib/supabase'
 import ProductsManager from '../components/ProductsManager'
 import { getLeads, updateLeadStatus } from '../lib/leads'
@@ -375,6 +376,162 @@ function LeadRow({ lead, onStatus }) {
 }
 
 // ── Dashboard ──
+// ── Account ──
+// Everything about the signed-in admin lives here: who you are, changing
+// the password, and getting signed out of a device you no longer have.
+function AccountPanel({ onSignOut }) {
+  const [user, setUser] = useState(null)
+  const [loadErr, setLoadErr] = useState('')
+
+  const [current, setCurrent] = useState('')
+  const [next, setNext] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [show, setShow] = useState(false)
+  const [pwState, setPwState] = useState('idle')   // idle | saving | saved
+  const [pwError, setPwError] = useState('')
+
+  const [globalState, setGlobalState] = useState('idle')
+
+  useEffect(() => {
+    getUser().then(setUser).catch((e) => setLoadErr(e?.message || 'Could not load your account.'))
+  }, [])
+
+  const submitPassword = async (e) => {
+    e.preventDefault()
+    setPwError('')
+
+    if (next.length < 8) return setPwError('Use at least 8 characters.')
+    if (next !== confirm) return setPwError("The two new passwords don't match.")
+    if (next === current) return setPwError('That is your current password.')
+
+    setPwState('saving')
+    try {
+      await changePassword(user.email, current, next)
+      setPwState('saved')
+      setCurrent(''); setNext(''); setConfirm('')
+      setTimeout(() => setPwState('idle'), 4000)
+    } catch (err) {
+      setPwError(err?.message || 'Could not change the password.')
+      setPwState('idle')
+    }
+  }
+
+  const signOutAll = async () => {
+    if (!window.confirm('Sign out of every device, including this one?\n\nYou will need your password to get back in.')) return
+    setGlobalState('saving')
+    try {
+      await signOutEverywhere()
+      onSignOut()
+    } catch {
+      setGlobalState('idle')
+      alert('Could not sign out everywhere. Check your connection and try again.')
+    }
+  }
+
+  const inputCls = 'w-full px-4 py-3 rounded-xl bg-white outline-none'
+  const inputStyle = { border: '1px solid #E3D5C8', color: '#3D1A1A' }
+  const card = 'bg-white rounded-2xl p-5 md:p-6 mb-4'
+  const cardStyle = { border: '1px solid #F0E6DC' }
+
+  if (loadErr) return <div className="rounded-xl p-4 text-sm" style={{ backgroundColor: '#FBE9E4', color: '#9D4433' }}>{loadErr}</div>
+  if (!user) return <p style={{ color: '#A8968C' }}>Loading…</p>
+
+  return (
+    <div>
+      {/* Who you are */}
+      <div className={card} style={cardStyle}>
+        <h3 className="font-playfair text-lg font-bold mb-4" style={{ color: '#3D1A1A' }}>Your account</h3>
+        <dl className="grid sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+          {[
+            ['Email', user.email],
+            ['Signed in since', when(user.last_sign_in_at)],
+            ['Account created', when(user.created_at)],
+            ['User ID', user.id],
+          ].map(([k, v]) => (
+            <div key={k}>
+              <dt className="text-xs uppercase tracking-wide mb-0.5" style={{ color: '#A8968C' }}>{k}</dt>
+              <dd className={k === 'User ID' ? 'font-mono text-xs break-all' : ''} style={{ color: '#3D1A1A' }}>{v || '—'}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="text-xs mt-4 pt-4" style={{ color: '#A8968C', borderTop: '1px solid #F0E6DC' }}>
+          This is the only account that can read orders. Its email is written into
+          the database access rules, so changing the email here would lock you out
+          of your own data — do that in Supabase, and update the SQL policies to match.
+        </p>
+      </div>
+
+      {/* Change password */}
+      <div className={card} style={cardStyle}>
+        <h3 className="font-playfair text-lg font-bold mb-1" style={{ color: '#3D1A1A' }}>Change password</h3>
+        <p className="text-sm mb-4" style={{ color: '#A8968C' }}>
+          You'll stay signed in on this device. Other devices keep their session until you sign them out below.
+        </p>
+        <form onSubmit={submitPassword} className="max-w-sm">
+          <label className="block text-sm font-medium mb-2" style={{ color: '#5C3A2E' }}>Current password</label>
+          <input type={show ? 'text' : 'password'} value={current} onChange={(e) => setCurrent(e.target.value)}
+            required autoComplete="current-password" className={`${inputCls} mb-4`} style={inputStyle} />
+
+          <label className="block text-sm font-medium mb-2" style={{ color: '#5C3A2E' }}>New password</label>
+          <input type={show ? 'text' : 'password'} value={next} onChange={(e) => setNext(e.target.value)}
+            required autoComplete="new-password" className={`${inputCls} mb-1`} style={inputStyle} />
+          <p className="text-xs mb-4" style={{ color: '#A8968C' }}>At least 8 characters.</p>
+
+          <label className="block text-sm font-medium mb-2" style={{ color: '#5C3A2E' }}>Confirm new password</label>
+          <input type={show ? 'text' : 'password'} value={confirm} onChange={(e) => setConfirm(e.target.value)}
+            required autoComplete="new-password" className={`${inputCls} mb-3`} style={inputStyle} />
+
+          <label className="flex items-center gap-2 text-sm mb-4" style={{ color: '#5C3A2E' }}>
+            <input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} />
+            Show passwords
+          </label>
+
+          {pwError && <p className="text-sm mb-3" style={{ color: '#9D4433' }}>{pwError}</p>}
+          {pwState === 'saved' && <p className="text-sm mb-3" style={{ color: '#2E7D52' }}>Password changed.</p>}
+
+          <button type="submit" disabled={pwState === 'saving'}
+            className="px-6 py-3 text-sm font-semibold rounded-full disabled:opacity-60"
+            style={{ backgroundColor: '#9D4433', color: 'white' }}>
+            {pwState === 'saving' ? 'Changing…' : 'Change password'}
+          </button>
+        </form>
+      </div>
+
+      {/* Sessions */}
+      <div className={card} style={cardStyle}>
+        <h3 className="font-playfair text-lg font-bold mb-1" style={{ color: '#3D1A1A' }}>Signed-in devices</h3>
+        <p className="text-sm mb-4" style={{ color: '#A8968C' }}>
+          Left yourself logged in on a shared or lost device? This ends every session
+          everywhere, including this one.
+        </p>
+        <button onClick={signOutAll} disabled={globalState === 'saving'}
+          className="px-6 py-3 text-sm font-semibold rounded-full disabled:opacity-60"
+          style={{ border: '1px solid #E3D5C8', color: '#5C3A2E' }}>
+          {globalState === 'saving' ? 'Signing out…' : 'Sign out everywhere'}
+        </button>
+      </div>
+
+      {/* Closing the account */}
+      <div className={card} style={{ border: '1px solid #E8C4B8', backgroundColor: '#FDF7F4' }}>
+        <h3 className="font-playfair text-lg font-bold mb-1" style={{ color: '#9D4433' }}>Closing this account</h3>
+        <p className="text-sm mb-3" style={{ color: '#5C3A2E' }}>
+          There's deliberately no button for this. Deleting the admin account doesn't
+          close the shop — it leaves the site running with every order, lead and
+          enquiry still in the database, and no way for you to read them. There is no
+          second admin to let you back in.
+        </p>
+        <p className="text-sm" style={{ color: '#5C3A2E' }}>
+          If you're winding the business down, do it in this order: take the site
+          offline, export your orders from the Orders tab, honour anything outstanding,
+          then delete the project from the Supabase dashboard. If you just want to hand
+          the shop to someone else, create their account in Supabase and update the
+          access-rule email instead — ask before doing that, it touches every table.
+        </p>
+      </div>
+    </div>
+  )
+}
+
 function Dashboard({ onSignOut }) {
   const [tab, setTab] = useState('orders')
   const [orders, setOrders] = useState([])
@@ -382,6 +539,9 @@ function Dashboard({ onSignOut }) {
   const [leads, setLeads] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [me, setMe] = useState(null)
+
+  useEffect(() => { getUser().then(setMe).catch(() => setMe(null)) }, [])
 
   const load = async () => {
     setLoading(true); setError('')
@@ -481,9 +641,18 @@ function Dashboard({ onSignOut }) {
           <span className="font-playfair text-xl font-bold" style={{ color: '#FBF6F0' }}>Ever Yours</span>
           <span className="text-xs ml-2" style={{ color: 'rgba(251,246,240,0.6)' }}>Admin</span>
         </div>
-        <button onClick={onSignOut} className="text-sm px-4 py-2 rounded-full" style={{ border: '1px solid rgba(251,246,240,0.3)', color: '#FBF6F0' }}>
-          Sign out
-        </button>
+        <div className="flex items-center gap-3">
+          {me && (
+            <button onClick={() => setTab('account')} title="Account settings"
+              className="hidden sm:block text-sm max-w-[16rem] truncate hover:underline"
+              style={{ color: 'rgba(251,246,240,0.7)' }}>
+              {me.email}
+            </button>
+          )}
+          <button onClick={onSignOut} className="text-sm px-4 py-2 rounded-full" style={{ border: '1px solid rgba(251,246,240,0.3)', color: '#FBF6F0' }}>
+            Sign out
+          </button>
+        </div>
       </header>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
@@ -505,14 +674,14 @@ function Dashboard({ onSignOut }) {
 
         {/* Tabs */}
         <div className="flex gap-2 mb-5 flex-wrap">
-          {[['orders', `Orders (${orders.length})`], ['leads', `Unfinished (${openLeads.length})`], ['corporate', `Corporate (${enquiries.length})`], ['products', 'Products'], ['reviews', 'Reviews'], ['faqs', 'FAQs']].map(([id, label]) => (
+          {[['orders', `Orders (${orders.length})`], ['leads', `Unfinished (${openLeads.length})`], ['corporate', `Corporate (${enquiries.length})`], ['products', 'Products'], ['reviews', 'Reviews'], ['faqs', 'FAQs'], ['account', 'Account']].map(([id, label]) => (
             <button key={id} onClick={() => setTab(id)}
               className="px-4 py-2 rounded-full text-sm font-medium"
               style={tab === id ? { backgroundColor: '#9D4433', color: 'white' } : { backgroundColor: '#F0E6DC', color: '#5C3A2E' }}>
               {label}
             </button>
           ))}
-          {tab !== 'products' && tab !== 'reviews' && tab !== 'faqs' && (
+          {tab !== 'products' && tab !== 'reviews' && tab !== 'faqs' && tab !== 'account' && (
             <button onClick={load} className="ml-auto px-4 py-2 rounded-full text-sm" style={{ border: '1px solid #E3D5C8', color: '#5C3A2E' }}>
               ↻ Refresh
             </button>
@@ -674,6 +843,7 @@ function Dashboard({ onSignOut }) {
         {tab === 'products' && <ProductsManager />}
         {tab === 'reviews' && <ProductsManager only="reviews" />}
         {tab === 'faqs' && <ProductsManager only="faqs" />}
+        {tab === 'account' && <AccountPanel onSignOut={onSignOut} />}
       </div>
     </div>
   )

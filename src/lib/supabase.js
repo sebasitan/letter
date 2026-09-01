@@ -110,3 +110,37 @@ export async function getOrders() {
   if (error) throw error
   return data
 }
+
+// ── Admin: account ───────────────────────────────────────────
+/** The signed-in admin, straight from the auth server (not the cached session). */
+export async function getUser() {
+  const { data, error } = await supabase.auth.getUser()
+  if (error) throw error
+  return data.user
+}
+
+/**
+ * Change the admin password.
+ *
+ * Supabase lets an active session set a new password without proving the
+ * old one — which means an unattended logged-in laptop is enough to lock
+ * the owner out of their own store. So we re-authenticate first and treat
+ * a failed sign-in as "wrong current password".
+ */
+export async function changePassword(email, currentPassword, newPassword) {
+  const { error: authError } = await supabase.auth.signInWithPassword({
+    email, password: currentPassword,
+  })
+  if (authError) throw new Error('Current password is incorrect.')
+
+  const { error } = await supabase.auth.updateUser({ password: newPassword })
+  if (error) throw error
+  return true
+}
+
+/** Sign out of every device, not just this browser. */
+export async function signOutEverywhere() {
+  const { error } = await supabase.auth.signOut({ scope: 'global' })
+  if (error) throw error
+  return true
+}
