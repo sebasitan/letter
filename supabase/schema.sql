@@ -1,5 +1,5 @@
 -- ============================================================
--- Akshar Studio — orders table
+-- Ever Yours — orders table
 -- Run this in Supabase: SQL Editor → New query → paste → Run
 -- ============================================================
 

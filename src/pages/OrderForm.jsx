@@ -3,10 +3,19 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { createOrder } from '../lib/supabase'
 import { fetchCatalog, DEFAULT_LETTERS, DEFAULT_GIFTS, DEFAULT_PAPERS, DEFAULT_INKS, DEFAULT_TIERS } from '../lib/products'
 import Seo from '../components/Seo'
+import { saveLead, markLeadConverted } from '../lib/leads'
+import { waLink } from '../lib/contact'
 
 // ── Per-letter-type content so the form feels tailored ──────────────
 // Product data (letter types, tiers, paper, ink, gifts) is loaded from
 // the catalog (Supabase, with code defaults as fallback) inside the component.
+
+// The three steps of the order flow
+const STEPS = [
+  { n: 1, label: 'Your Letter' },
+  { n: 2, label: 'Make it Special' },
+  { n: 3, label: 'Delivery & Contact' },
+]
 
 // Languages the customer can write their letter in (also drives voice input)
 const letterLanguages = [
@@ -119,6 +128,54 @@ export default function OrderForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
+
+  // ── Multi-step flow ──────────────────────────────────────────
+  // The form is long; showing it all at once reads as a wall. Three
+  // steps turn it into a finite task and keep the emotional part
+  // (the message) away from the logistics.
+  const [confirmed, setConfirmed] = useState(null)   // { id, total } from the server
+  const [step, setStep] = useState(1)
+  const [stepError, setStepError] = useState('')
+
+  // Changing the letter type restarts the flow
+  useEffect(() => { setStep(1); setStepError('') }, [formData.letterType])
+
+  const validateStep = (n) => {
+    if (n === 1) {
+      if (!formData.recipientName.trim()) return "Please tell us who this letter is for."
+      if (!formData.messageToWrite.trim()) return "Tell us what you'd like the letter to say — even a few rough lines are enough, we'll shape them."
+      if (!formData.customerName.trim()) return 'Please add your name so we know who to write back to.'
+      if (!/^[\d+\s-]{10,}$/.test(formData.customerPhone.trim())) return 'Please add a valid WhatsApp number — that is where your draft goes.'
+    }
+    return ''
+  }
+
+  const goToStep = (n) => {
+    setStepError('')
+    setStep(n)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const nextStep = () => {
+    const msg = validateStep(step)
+    if (msg) { setStepError(msg); return }
+    const next = Math.min(step + 1, 3)
+    // Save the partial order so an abandoner is still a reachable lead.
+    // Deliberately not awaited — capture must never slow the customer down.
+    saveLead({
+      name: formData.customerName,
+      phone: formData.customerPhone,
+      email: formData.customerEmail,
+      letterType: cfg?.label || formData.letterType,
+      recipientName: formData.recipientName,
+      occasion: formData.occasion,
+      step: next,
+      total: totalPrice,
+    })
+    goToStep(next)
+  }
+
+  const prevStep = () => goToStep(Math.max(step - 1, 1))
 
   // Voice-to-type (Web Speech API)
   const recognitionRef = useRef(null)
@@ -299,52 +356,58 @@ export default function OrderForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    // Enter-key inside an input would otherwise submit from step 1 or 2
+    if (step !== 3) { nextStep(); return }
     setIsSubmitting(true)
     setError('')
     try {
       const langLabel = letterLanguages.find(l => l.code === formData.letterLang)?.label || 'English'
-      const giftSummary = formData.letterType === 'mystery'
-        ? 'Mystery Box (gift curated by studio)'
-        : formData.giftMode === 'choose'
-          ? (selectedGifts.length ? `Chosen gifts: ${selectedGifts.map(g => `${g.name}${g.qty > 1 ? ` x${g.qty}` : ''}`).join(', ')}` : 'No gift')
-          : `Surprise gift: ${selectedTier?.label || 'No Gift'}`
-      const deliveryPhone = formData.surpriseDelivery ? formData.customerPhone : formData.deliveryPhone
-      const instructions = [
-        `Letter language: ${langLabel}`,
-        `Paper: ${selectedPaper?.name || 'Classic Parchment'}`,
-        `Ink: ${selectedInk?.name || 'Classic Black'}`,
-        `Delivery contact: ${deliveryPhone}${formData.surpriseDelivery ? ' (surprise — contact buyer)' : ''}`,
-        giftSummary,
-        formData.specialInstructions,
-      ].filter(Boolean).join(' | ')
 
-      await createOrder({
-        customer_name: formData.customerName,
-        customer_phone: formData.customerPhone,
-        customer_email: formData.customerEmail || null,
-        letter_type: cfg?.label || formData.letterType,
-        occasion: formData.occasion || null,
-        recipient_name: formData.recipientName,
-        relationship: formData.relationship || null,
-        message_to_write: formData.messageToWrite,
-        tone: formData.tone || null,
-        mystery_tier: formData.giftMode === 'choose'
-          ? (selectedGifts.map(g => `${g.name}${g.qty > 1 ? ` x${g.qty}` : ''}`).join(', ') || 'No Gift')
-          : (selectedTier?.label || 'No Gift'),
-        delivery_address: [formData.deliveryAddress, formData.area, formData.state]
-          .filter(Boolean).join(', '),
-        city: formData.city || null,
-        pincode: formData.pincode || null,
-        special_instructions: instructions,
-        total_price: totalPrice,
-        status: 'pending',
+      // We send ids, never a price. The server prices the order from the
+      // catalog and returns the authoritative total (supabase/orders_secure.sql).
+      const result = await createOrder({
+        customerName: formData.customerName,
+        customerPhone: formData.customerPhone,
+        customerEmail: formData.customerEmail,
+        letterSlug: formData.letterType,
+        recipientName: formData.recipientName,
+        relationship: formData.relationship,
+        occasion: formData.occasion,
+        message: formData.messageToWrite,
+        tone: formData.tone,
+        letterLang: langLabel,
+        paperId: formData.paperType,
+        inkId: formData.inkColor,
+        giftMode: formData.giftMode,
+        tierId: formData.mysteryTier,
+        giftItems: selectedGifts.map(g => ({ id: g.id, qty: g.qty })),
+        deliveryAddress: formData.deliveryAddress,
+        area: formData.area,
+        city: formData.city,
+        state: formData.state,
+        pincode: formData.pincode,
+        deliveryPhone: formData.surpriseDelivery ? formData.customerPhone : formData.deliveryPhone,
+        surprise: formData.surpriseDelivery,
+        specialInstructions: formData.specialInstructions,
       })
+
+      // Show what the server actually charged, not what the browser guessed.
+      setConfirmed({
+        id: result?.id ?? null,
+        total: Number(result?.total ?? totalPrice),
+      })
+      markLeadConverted()   // this one came back — stop chasing it
       setSubmitted(true)
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch (err) {
       console.error('Order submission failed:', err)
-      const detail = err?.message || err?.error_description || 'Unknown error'
-      setError(`Could not save your order: ${detail}. Please check your details or reach us on WhatsApp.`)
+      // A Postgres error carries a code and a message we wrote ourselves
+      // ("Please enter a valid WhatsApp number.") — show that to the
+      // customer. Anything else is a network/plumbing failure and the raw
+      // text ("Failed to fetch") only confuses them.
+      setError(err?.code && err?.message
+        ? err.message
+        : 'Could not place your order — please check your connection and try again, or send us the details on WhatsApp.')
       // bring the error into view
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
     } finally {
@@ -354,15 +417,18 @@ export default function OrderForm() {
 
   // ── Success screen ──────────────────────────────────────────────
   if (submitted) {
-    const waMessage = encodeURIComponent(
-      `Hi Akshar Studio! 🌸 I just placed an order:\n` +
+    // Always show what the server actually priced, not the browser's guess.
+    const confirmedTotal = confirmed?.total ?? totalPrice
+    const waMessage = (
+      `Hi Ever Yours! 🌸 I just placed an order:\n` +
+      (confirmed?.id ? `• Order #${confirmed.id}\n` : '') +
       `• ${cfg?.label || 'Letter'}\n` +
       (formData.recipientName ? `• For: ${formData.recipientName}\n` : '') +
-      `• Total: ₹${totalPrice.toLocaleString()}\n` +
+      `• Total: ₹${confirmedTotal.toLocaleString()}\n` +
       `• Name: ${formData.customerName}\n` +
       `Looking forward to the draft!`
     )
-    const waLink = `https://wa.me/919876543210?text=${waMessage}`
+    const waHref = waLink(waMessage)
 
     return (
       <div style={{ backgroundColor: '#FBF6F0' }} className="min-h-screen flex items-center justify-center p-4">
@@ -374,16 +440,46 @@ export default function OrderForm() {
             Order received!
           </h1>
           <p className="mb-6" style={{ color: '#7A6258' }}>
-            Thank you, {formData.customerName.split(' ')[0] || 'friend'}. We'll share your draft and all updates on <strong>WhatsApp</strong> — tap below so we can reach you. 💛
+            Thank you, {formData.customerName.split(' ')[0] || 'friend'}. Your request is with us — <strong>nothing has been charged yet</strong>. 💛
           </p>
-          <div className="rounded-xl p-4 mb-6" style={{ backgroundColor: '#F5EDE4' }}>
-            <p className="text-xs uppercase tracking-wide mb-1" style={{ color: '#A8968C' }}>Order Total</p>
-            <p className="text-2xl font-bold" style={{ color: '#3D1A1A' }}>₹{totalPrice.toLocaleString()}</p>
+
+          {/* What happens next — removes the "did my order go through?" doubt */}
+          <div className="rounded-xl p-5 mb-5 text-left" style={{ backgroundColor: '#F5EDE4' }}>
+            <p className="text-xs uppercase tracking-wide mb-3 font-semibold" style={{ color: '#A8968C' }}>What happens next</p>
+            <ol className="space-y-2.5 text-sm" style={{ color: '#5C3A2E' }}>
+              <li className="flex gap-2.5">
+                <span className="font-bold" style={{ color: '#9D4433' }}>1.</span>
+                <span>We write your draft and send it on <strong>WhatsApp within 24 hours</strong>.</span>
+              </li>
+              <li className="flex gap-2.5">
+                <span className="font-bold" style={{ color: '#9D4433' }}>2.</span>
+                <span>You read it and ask for changes — <strong>one free revision</strong> included.</span>
+              </li>
+              <li className="flex gap-2.5">
+                <span className="font-bold" style={{ color: '#9D4433' }}>3.</span>
+                <span>Once you approve, we share a <strong>UPI link</strong> — pay only then.</span>
+              </li>
+              <li className="flex gap-2.5">
+                <span className="font-bold" style={{ color: '#9D4433' }}>4.</span>
+                <span>We hand-write it in calligraphy, wax seal it, and deliver.</span>
+              </li>
+            </ol>
           </div>
+
+          <div className="rounded-xl p-4 mb-6" style={{ backgroundColor: '#FBF6F0', border: '1px dashed #E3D5C8' }}>
+            <p className="text-xs uppercase tracking-wide mb-1" style={{ color: '#A8968C' }}>
+              {confirmed?.id ? `Order #${confirmed.id} · ` : ''}Total — payable after approval
+            </p>
+            <p className="text-2xl font-bold" style={{ color: '#3D1A1A' }}>₹{confirmedTotal.toLocaleString()}</p>
+          </div>
+
+          <p className="text-sm mb-4" style={{ color: '#7A6258' }}>
+            Tap below so we can reach you on WhatsApp — it's how we send your draft.
+          </p>
 
           {/* Primary: connect on WhatsApp for updates */}
           <a
-            href={waLink}
+            href={waHref}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-sm font-semibold rounded-full w-full mb-3"
@@ -480,15 +576,60 @@ export default function OrderForm() {
                   </div>
                 </div>
 
-                {/* Phase: Your Letter */}
-                <div className="flex items-center gap-3 px-1">
-                  <span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: '#C49A2E' }}>✍️ Your Letter</span>
-                  <span className="flex-1 h-px" style={{ backgroundColor: '#E3D5C8' }} />
+                {/* ── Step progress ── */}
+                <div className="bg-white rounded-2xl p-4 md:p-5" style={{ border: '1px solid #F0E6DC' }}>
+                  <div className="flex items-center">
+                    {STEPS.map((st, i) => {
+                      const done = step > st.n
+                      const current = step === st.n
+                      return (
+                        <div key={st.n} className={i < STEPS.length - 1 ? 'flex items-center flex-1' : 'flex items-center'}>
+                          <button
+                            type="button"
+                            onClick={() => { if (done) goToStep(st.n) }}
+                            disabled={!done}
+                            title={done ? `Back to ${st.label}` : undefined}
+                            className="flex items-center gap-2.5"
+                            style={{ cursor: done ? 'pointer' : 'default' }}
+                          >
+                            <span
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all"
+                              style={current
+                                ? { backgroundColor: '#9D4433', color: 'white' }
+                                : done
+                                  ? { backgroundColor: '#E0A93C', color: '#451A1C' }
+                                  : { backgroundColor: '#F5EDE4', color: '#A8968C' }}
+                            >
+                              {done ? '✓' : st.n}
+                            </span>
+                            <span
+                              className="hidden sm:block text-xs font-semibold text-left leading-tight"
+                              style={{ color: current ? '#3D1A1A' : done ? '#5C3A2E' : '#A8968C' }}
+                            >
+                              {st.label}
+                            </span>
+                          </button>
+                          {i < STEPS.length - 1 && (
+                            <span
+                              className="flex-1 h-0.5 mx-2 md:mx-3 rounded-full transition-colors"
+                              style={{ backgroundColor: done ? '#E0A93C' : '#F0E6DC' }}
+                            />
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <p className="text-xs mt-3 sm:hidden" style={{ color: '#7A6258' }}>
+                    Step {step} of 3 · <strong>{STEPS[step - 1].label}</strong>
+                  </p>
                 </div>
+
+                {/* ══ STEP 1 — the letter itself ══ */}
+                {step === 1 && (<>
 
                 {/* ── About the recipient ── */}
                 <div className="bg-white rounded-2xl p-6" style={{ border: '1px solid #F0E6DC' }}>
-                  <h2 className="font-playfair text-lg font-bold mb-1" style={{ color: '#3D1A1A' }}>1. Who is this letter for?</h2>
+                  <h2 className="font-playfair text-lg font-bold mb-1" style={{ color: '#3D1A1A' }}>Who is this letter for?</h2>
                   <p className="text-sm mb-5" style={{ color: '#A8968C' }}>{cfg.recipientLabel}</p>
 
                   <div className="grid md:grid-cols-2 gap-5">
@@ -526,7 +667,7 @@ export default function OrderForm() {
 
                 {/* ── What to say ── */}
                 <div className="bg-white rounded-2xl p-6" style={{ border: '1px solid #F0E6DC' }}>
-                  <h2 className="font-playfair text-lg font-bold mb-1" style={{ color: '#3D1A1A' }}>2. What do you want to say?</h2>
+                  <h2 className="font-playfair text-lg font-bold mb-1" style={{ color: '#3D1A1A' }}>What do you want to say?</h2>
                   <p className="text-sm mb-4" style={{ color: '#A8968C' }}>{cfg.prompt}</p>
 
                   {/* Letter language selector */}
@@ -662,15 +803,44 @@ export default function OrderForm() {
                   </button>
                 </div>
 
-                {/* Phase: Make it Special */}
-                <div className="flex items-center gap-3 px-1 pt-2">
-                  <span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: '#C49A2E' }}>🎁 Make it Special</span>
-                  <span className="flex-1 h-px" style={{ backgroundColor: '#E3D5C8' }} />
+                {/* ── Your details ── */}
+                <div className="bg-white rounded-2xl p-6" style={{ border: '1px solid #F0E6DC' }}>
+                  <h2 className="font-playfair text-lg font-bold mb-5" style={{ color: '#3D1A1A' }}>
+                    Where do we send your draft?
+                  </h2>
+                  <p className="text-sm -mt-3 mb-5" style={{ color: '#A8968C' }}>
+                    We send the draft on WhatsApp for your approval before anything is written.
+                  </p>
+                  <div className="grid md:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-sm font-medium mb-2" style={{ color: '#5C3A2E' }}>Your name *</label>
+                      <input type="text" name="customerName" value={formData.customerName} onChange={handleChange} required className={inputCls} style={inputStyle} placeholder="Your name" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2" style={{ color: '#5C3A2E' }}>Phone (WhatsApp) *</label>
+                      <input type="tel" name="customerPhone" value={formData.customerPhone} onChange={handleChange} required className={inputCls} style={inputStyle} placeholder="+91 98765 43210" />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium mb-2" style={{ color: '#5C3A2E' }}>Email (optional)</label>
+                      <input type="email" name="customerEmail" value={formData.customerEmail} onChange={handleChange} className={inputCls} style={inputStyle} placeholder="your@email.com" />
+                    </div>
+                  </div>
+
+                  <p className="text-xs mt-4 leading-relaxed" style={{ color: '#A8968C' }}>
+                    🔒 We save your name and number so we can send your draft — and gently
+                    follow up if you don't finish. We never share them, and you can ask us
+                    to delete your details any time.
+                  </p>
                 </div>
+
+                </>)}
+
+                {/* ══ STEP 2 — paper, ink, gift ══ */}
+                {step === 2 && (<>
 
                 {/* ── Paper & ink ── */}
                 <div className="bg-white rounded-2xl p-6" style={{ border: '1px solid #F0E6DC' }}>
-                  <h2 className="font-playfair text-lg font-bold mb-1" style={{ color: '#3D1A1A' }}>3. Paper & ink</h2>
+                  <h2 className="font-playfair text-lg font-bold mb-1" style={{ color: '#3D1A1A' }}>Paper & ink</h2>
                   <p className="text-sm mb-4" style={{ color: '#A8968C' }}>The finishing touch for your handwritten letter.</p>
 
                   {/* Paper */}
@@ -719,7 +889,7 @@ export default function OrderForm() {
                 {/* ── Gift add-on (hidden for mystery box) ── */}
                 {formData.letterType !== 'mystery' && (
                   <div className="bg-white rounded-2xl p-6" style={{ border: '1px solid #F0E6DC' }}>
-                    <h2 className="font-playfair text-lg font-bold mb-1" style={{ color: '#3D1A1A' }}>4. Add a gift?</h2>
+                    <h2 className="font-playfair text-lg font-bold mb-1" style={{ color: '#3D1A1A' }}>Add a gift?</h2>
                     <p className="text-sm mb-4" style={{ color: '#A8968C' }}>Pair your letter with a keepsake. Optional.</p>
 
                     {/* Mode toggle */}
@@ -833,37 +1003,15 @@ export default function OrderForm() {
                   </div>
                 )}
 
-                {/* Phase: Delivery & Contact */}
-                <div className="flex items-center gap-3 px-1 pt-2">
-                  <span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: '#C49A2E' }}>📦 Delivery & Contact</span>
-                  <span className="flex-1 h-px" style={{ backgroundColor: '#E3D5C8' }} />
-                </div>
+                </>)}
 
-                {/* ── Your details ── */}
-                <div className="bg-white rounded-2xl p-6" style={{ border: '1px solid #F0E6DC' }}>
-                  <h2 className="font-playfair text-lg font-bold mb-5" style={{ color: '#3D1A1A' }}>
-                    {formData.letterType !== 'mystery' ? '5' : '4'}. Your details
-                  </h2>
-                  <div className="grid md:grid-cols-2 gap-5">
-                    <div>
-                      <label className="block text-sm font-medium mb-2" style={{ color: '#5C3A2E' }}>Your name *</label>
-                      <input type="text" name="customerName" value={formData.customerName} onChange={handleChange} required className={inputCls} style={inputStyle} placeholder="Your name" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2" style={{ color: '#5C3A2E' }}>Phone (WhatsApp) *</label>
-                      <input type="tel" name="customerPhone" value={formData.customerPhone} onChange={handleChange} required className={inputCls} style={inputStyle} placeholder="+91 98765 43210" />
-                    </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium mb-2" style={{ color: '#5C3A2E' }}>Email (optional)</label>
-                      <input type="email" name="customerEmail" value={formData.customerEmail} onChange={handleChange} className={inputCls} style={inputStyle} placeholder="your@email.com" />
-                    </div>
-                  </div>
-                </div>
+                {/* ══ STEP 3 — who you are, where it goes ══ */}
+                {step === 3 && (<>
 
                 {/* ── Delivery ── */}
                 <div className="bg-white rounded-2xl p-6" style={{ border: '1px solid #F0E6DC' }}>
                   <h2 className="font-playfair text-lg font-bold mb-5" style={{ color: '#3D1A1A' }}>
-                    {formData.letterType !== 'mystery' ? '6' : '5'}. Where should we deliver?
+                    Where should we deliver?
                   </h2>
                   <div className="grid md:grid-cols-2 gap-5">
                     {/* Pincode first — drives auto-fill */}
@@ -971,6 +1119,37 @@ export default function OrderForm() {
                   </div>
                 </div>
 
+                </>)}
+
+                {/* ── Step navigation (in the reading flow) ── */}
+                {stepError && (
+                  <div className="rounded-xl px-4 py-3 text-sm" style={{ backgroundColor: '#FDECEA', color: '#9D2E22', border: '1px solid #F3C9C3' }}>
+                    {stepError}
+                  </div>
+                )}
+                <div className="flex items-center gap-3">
+                  {step > 1 && (
+                    <button
+                      type="button"
+                      onClick={prevStep}
+                      className="inline-flex items-center gap-2 px-6 py-3.5 text-sm font-semibold rounded-full transition-all"
+                      style={{ backgroundColor: 'transparent', color: '#9D4433', border: '1.5px solid #E3C98A' }}
+                    >
+                      ← Back
+                    </button>
+                  )}
+                  {step < 3 && (
+                    <button
+                      type="button"
+                      onClick={nextStep}
+                      className="flex-1 inline-flex items-center justify-center gap-2 px-7 py-3.5 text-sm font-semibold rounded-full transition-all"
+                      style={{ backgroundColor: '#9D4433', color: 'white' }}
+                    >
+                      {step === 1 ? 'Continue to paper & gift →' : 'Continue to delivery →'}
+                    </button>
+                  )}
+                </div>
+
                 </div>{/* ── END LEFT COLUMN ── */}
 
                 {/* ── RIGHT COLUMN: sticky order summary ── */}
@@ -1058,18 +1237,31 @@ export default function OrderForm() {
                     </div>
                   )}
 
-                  {/* Place Order — desktop (inside sticky summary) */}
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="hidden lg:flex w-full items-center justify-center gap-2 mt-4 py-3.5 text-sm font-semibold rounded-full transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-                    style={{ backgroundColor: '#E0A93C', color: '#451A1C' }}
-                  >
-                    {isSubmitting ? 'Placing…' : 'Place Order →'}
-                  </button>
+                  {/* Desktop action — advances the step, or places the order on the last one */}
+                  {step < 3 ? (
+                    <button
+                      type="button"
+                      onClick={nextStep}
+                      className="hidden lg:flex w-full items-center justify-center gap-2 mt-4 py-3.5 text-sm font-semibold rounded-full transition-all"
+                      style={{ backgroundColor: '#E0A93C', color: '#451A1C' }}
+                    >
+                      Continue →
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="hidden lg:flex w-full items-center justify-center gap-2 mt-4 py-3.5 text-sm font-semibold rounded-full transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                      style={{ backgroundColor: '#E0A93C', color: '#451A1C' }}
+                    >
+                      {isSubmitting ? 'Placing…' : 'Place Order →'}
+                    </button>
+                  )}
 
                   <p className="text-center text-xs mt-3" style={{ color: 'rgba(251,246,240,0.55)' }}>
-                    We'll send a draft for approval before writing. One free revision included.
+                    {step < 3
+                      ? 'Nothing is charged yet — you pay only after you approve the draft.'
+                      : "We'll send a draft for approval before writing. One free revision included."}
                   </p>
                 </div>
 
@@ -1090,7 +1282,7 @@ export default function OrderForm() {
                   </ul>
 
                   <a
-                    href="https://wa.me/919876543210"
+                    href={waLink()}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-2 mt-4 pt-4 text-sm font-medium"
@@ -1115,28 +1307,39 @@ export default function OrderForm() {
                   <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
                     <div className="leading-tight">
                       <span className="text-[10px] uppercase tracking-wide block" style={{ color: 'rgba(251,246,240,0.5)' }}>
-                        Total{(formData.giftMode === 'choose' && giftCount > 0) ? ` · ${giftCount} gift${giftCount > 1 ? 's' : ''}` : ''}
+                        {step < 3 ? 'Estimated' : 'Total'}{(formData.giftMode === 'choose' && giftCount > 0) ? ` · ${giftCount} gift${giftCount > 1 ? 's' : ''}` : ''}
                       </span>
                       <span className="text-xl font-bold" style={{ color: '#E0A93C' }}>₹{totalPrice.toLocaleString()}</span>
                     </div>
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="inline-flex items-center justify-center gap-2 px-7 py-3 text-sm font-semibold rounded-full transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-                      style={{ backgroundColor: '#E0A93C', color: '#451A1C' }}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                          </svg>
-                          Placing…
-                        </>
-                      ) : (
-                        <>Place Order →</>
-                      )}
-                    </button>
+                    {step < 3 ? (
+                      <button
+                        type="button"
+                        onClick={nextStep}
+                        className="inline-flex items-center justify-center gap-2 px-7 py-3 text-sm font-semibold rounded-full transition-all"
+                        style={{ backgroundColor: '#E0A93C', color: '#451A1C' }}
+                      >
+                        Continue →
+                      </button>
+                    ) : (
+                      <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="inline-flex items-center justify-center gap-2 px-7 py-3 text-sm font-semibold rounded-full transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                        style={{ backgroundColor: '#E0A93C', color: '#451A1C' }}
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                            </svg>
+                            Placing…
+                          </>
+                        ) : (
+                          <>Place Order →</>
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
               </>

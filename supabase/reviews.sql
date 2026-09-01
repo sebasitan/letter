@@ -1,5 +1,5 @@
 -- ============================================================
--- Akshar Studio — Reviews (admin-managed customer testimonials)
+-- Ever Yours — Reviews (admin-managed customer testimonials)
 -- Run in Supabase → SQL Editor. Replace admin email if different.
 -- ============================================================
 create table if not exists public.reviews (

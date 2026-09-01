@@ -18,7 +18,7 @@ const values = [
       </svg>
     ),
     title: 'Private & Personal',
-    description: 'Your story stays yours. We never share, store, or reuse your messages. Complete confidentiality, always.',
+    description: 'Your story stays yours. Only the writer working on your letter ever reads it — we never share, publish or reuse it.',
   },
   {
     icon: (
@@ -45,7 +45,7 @@ const skills = ['Calligraphy', 'Hand Lettering', 'Wax Sealing', 'Gift Curation',
 export default function About() {
   return (
     <div style={{ backgroundColor: '#FBF6F0' }} className="min-h-screen">
-      <Seo title="About Us" description="The story of Akshar Studio — handwritten calligraphy letters made with heart in Bangalore. Words, handwriting, emotions." path="/about" />
+      <Seo title="About Us" description="The story of Ever Yours — handwritten calligraphy letters made with heart in Bangalore. Words, handwriting, emotions." path="/about" />
       {/* Hero */}
       <section className="py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-6">
@@ -59,7 +59,7 @@ export default function About() {
                 <span className="italic" style={{ color: '#C49A2E' }}>long after</span> the moment.
               </h1>
               <p className="text-lg leading-relaxed mb-5" style={{ color: '#5C3A2E' }}>
-                Akshar Studio was born from a simple belief: in a world of instant messages and digital noise, a handwritten letter still has the power to move hearts and heal souls.
+                Ever Yours was born from a simple belief: in a world of instant messages and digital noise, a handwritten letter still has the power to move hearts and heal souls.
               </p>
               <p className="leading-relaxed mb-5" style={{ color: '#7A6258' }}>
                 What started as a personal passion for calligraphy turned into a mission — to help people say the things they struggle to express. Whether it's love, gratitude, apology, or goodbye, we believe every feeling deserves to be written beautifully.
@@ -76,7 +76,7 @@ export default function About() {
               />
               <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-xl shadow-lg max-w-xs" style={{ transform: 'rotate(-2deg)' }}>
                 <p className="font-playfair italic" style={{ color: '#5C3A2E' }}>
-                  "In akshar, every letter is a labor of love."
+                  "Every letter ends the same way. Ours begins there."
                 </p>
                 <svg className="w-5 h-5 mt-2" viewBox="0 0 24 24" fill="#9D4433">
                   <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
@@ -94,13 +94,17 @@ export default function About() {
             The Name
           </span>
           <h2 className="font-playfair text-3xl md:text-4xl font-bold mt-4 mb-6" style={{ color: '#FBF6F0' }}>
-            What is <span className="italic" style={{ color: '#E0A93C' }}>"Akshar"</span>?
+            Why <span className="italic" style={{ color: '#E0A93C' }}>"Ever Yours"</span>?
           </h2>
           <p className="text-lg leading-relaxed" style={{ color: 'rgba(251,246,240,0.8)' }}>
-            In Hindi, <span className="font-semibold" style={{ color: '#E0A93C' }}>"Akshar" (अक्षर)</span> means "letter" — not just any letter, but something eternal, something that cannot be destroyed. It's the building block of all words, all stories, all emotions.
+            It's how letters used to end. Not <em>regards</em>, not <em>thanks</em> —{' '}
+            <span className="font-semibold" style={{ color: '#E0A93C' }}>Ever Yours</span>. Two
+            words that promise the feeling doesn't stop where the page does.
           </p>
           <p className="mt-4 leading-relaxed" style={{ color: 'rgba(251,246,240,0.55)' }}>
-            We named our studio Akshar because we believe in the permanence of words written with intention. Digital messages disappear. Handwritten letters become keepsakes.
+            We took the sign-off as our name because that's the whole point of writing by hand.
+            A message gets scrolled past. A letter is still in someone's drawer twenty years
+            later — and it still says <em>ever yours</em>.
           </p>
         </div>
       </section>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchFaqs, DEFAULT_FAQS } from '../lib/products'
 import Seo from '../components/Seo'
+import { waLink, WHATSAPP_DISPLAY } from '../lib/contact'
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -32,8 +33,8 @@ export default function Contact() {
         </svg>
       ),
       label: 'WhatsApp',
-      value: '+91 98765 43210',
-      href: 'https://wa.me/919876543210',
+      value: WHATSAPP_DISPLAY,
+      href: waLink(),
     },
     {
       icon: (
@@ -42,8 +43,8 @@ export default function Contact() {
         </svg>
       ),
       label: 'Email',
-      value: 'hello@aksharstudio.in',
-      href: 'mailto:hello@aksharstudio.in',
+      value: 'hello@everyours.in',
+      href: 'mailto:hello@everyours.in',
     },
     {
       icon: (
@@ -97,7 +98,7 @@ export default function Contact() {
 
   return (
     <div className="bg-cream-100 min-h-screen">
-      <Seo title="Contact Us" description="Questions or a custom order? Reach Akshar Studio on WhatsApp — Bangalore handwritten letters & personalised gifting." path="/contact" />
+      <Seo title="Contact Us" description="Questions or a custom order? Reach Ever Yours on WhatsApp — Bangalore handwritten letters & personalised gifting." path="/contact" />
       {/* Header */}
       <section className="section-padding pb-8">
         <div className="container-custom text-center">
@@ -238,7 +239,7 @@ export default function Contact() {
 
               {/* Quick WhatsApp */}
               <a
-                href="https://wa.me/919876543210?text=Hi!%20I%27d%20like%20to%20know%20more%20about%20Akshar%20Studio."
+                href={waLink("Hi! I'd like to know more about Ever Yours.")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="card bg-green-50 border-green-200 flex items-center gap-4 hover:bg-green-100 transition-colors"

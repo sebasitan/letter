@@ -1,8 +1,9 @@
 import { useEffect } from 'react'
 
-const SITE = 'Akshar Studio'
-// Update this to your custom domain once you connect it.
-const BASE_URL = 'https://letter-rosy-kappa.vercel.app'
+import { BUSINESS } from '../lib/business'
+
+const SITE = BUSINESS.legalName
+const BASE_URL = BUSINESS.siteUrl
 
 function upsertMeta(attr, key, content) {
   if (!content) return

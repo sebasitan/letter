@@ -113,11 +113,12 @@ export const DEFAULT_TIERS = [
   { id: 'luxe', name: 'Luxe', description: 'Premium paper & ink', price: 999, sort_order: 3 },
 ]
 
-export const DEFAULT_REVIEWS = [
-  { id: 1, name: 'Rahul K.', location: 'Koramangala, Bangalore', rating: 5, letter_type: 'Love Letter', sort_order: 1, quote: 'My wife cried when she opened it. She said nobody had ever taken that kind of time to say those things. I just gave them the feelings — they found the words.' },
-  { id: 2, name: 'Ananya S.', location: 'Indiranagar, Bangalore', rating: 5, letter_type: 'Healing Letter', sort_order: 2, quote: 'The closure letter was the most healing thing I did for myself this year. Reading it made me feel finally understood.' },
-  { id: 3, name: 'Meera R.', location: 'Whitefield, Bangalore', rating: 5, letter_type: 'Birthday Letter', sort_order: 3, quote: 'Their same-day service is a lifesaver. The birthday letter for my sister reached in time and made her day so special!' },
-]
+// Intentionally empty. Real reviews are added from the admin panel
+// (Supabase `reviews` table) as customers send them in. Never seed
+// invented testimonials here — inventing customer names and quotes on a
+// live storefront is a misleading-advertising risk under the Consumer
+// Protection Act, and it is the one thing that can't be walked back.
+export const DEFAULT_REVIEWS = []
 
 export const DEFAULT_FAQS = [
   { id: 1, category: 'Ordering', sort_order: 1, question: 'How long does it take to receive my letter?', answer: 'For Bangalore, we offer same-day delivery. For other cities, expect 3–5 business days via India Post.' },
@@ -125,10 +126,10 @@ export const DEFAULT_FAQS = [
   { id: 3, category: 'Ordering', sort_order: 3, question: "What if I don't know what to say?", answer: "That's our specialty. Just tell us the feeling, a few memories, and the relationship — we'll craft the perfect words." },
   { id: 4, category: 'Personalisation', sort_order: 4, question: 'Can I write the letter in my own language?', answer: 'Absolutely — English, Tamil, Hindi, Kannada and Telugu. You can type phonetically (e.g. "vanakkam" → வணக்கம்) or use the voice button to speak it.' },
   { id: 5, category: 'Personalisation', sort_order: 5, question: 'Can I choose the paper and ink?', answer: 'Yes — pick from several premium papers and ink colours (including metallic gold) right in the order form.' },
-  { id: 6, category: 'Personalisation', sort_order: 6, question: 'Is my message kept private?', answer: 'Always. We never store, share or reuse your messages. Complete confidentiality is our promise.' },
+  { id: 6, category: 'Personalisation', sort_order: 6, question: 'Is my message kept private?', answer: "Your message is stored securely so the writer working on your letter can read it — we couldn't write the letter otherwise. Only our team ever sees it. We never share it, publish it, use it in marketing, or reuse it for anyone else, and you can ask us to delete it any time after delivery. Our Privacy Policy has the full detail." },
   { id: 7, category: 'Delivery', sort_order: 7, question: 'Where do you deliver?', answer: 'Same-day across Bangalore via Dunzo / Porter, and PAN-India via India Post.' },
   { id: 8, category: 'Delivery', sort_order: 8, question: 'Can you keep it a surprise?', answer: "Yes — at checkout you can ask us to contact you instead of the recipient, so the surprise stays intact." },
-  { id: 9, category: 'Payment & Bulk', sort_order: 9, question: 'How do I pay?', answer: 'We accept UPI and confirm orders over WhatsApp. Secure and simple.' },
+  { id: 9, category: 'Payment & Bulk', sort_order: 9, question: 'How do I pay?', answer: "Nothing is charged when you place the order. We write your draft and send it on WhatsApp — once you approve it, we share a UPI link or QR for payment. You only pay for a letter you're happy with." },
   { id: 10, category: 'Payment & Bulk', sort_order: 10, question: 'Do you do corporate or bulk orders?', answer: 'Yes! Employee birthdays, festivals, client gifting and more — with volume pricing. Visit our Corporate page for a custom quote.' },
 ]
 

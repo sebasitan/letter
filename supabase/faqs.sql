@@ -1,5 +1,5 @@
 -- ============================================================
--- Akshar Studio — FAQs (admin-managed)
+-- Ever Yours — FAQs (admin-managed)
 -- Run in Supabase → SQL Editor. Replace admin email if different.
 -- ============================================================
 create table if not exists public.faqs (

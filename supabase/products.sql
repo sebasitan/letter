@@ -1,5 +1,5 @@
 -- ============================================================
--- Akshar Studio — Product catalog tables
+-- Ever Yours — Product catalog tables
 -- Run in Supabase: SQL Editor → New query → paste → Run
 -- Replace the admin email below if different.
 -- ============================================================

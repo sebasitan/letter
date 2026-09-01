@@ -10,6 +10,7 @@ import Corporate from './pages/Corporate'
 import Reviews from './pages/Reviews'
 import Faq from './pages/Faq'
 import Admin from './pages/Admin'
+import { Privacy, Terms, Shipping, Refunds } from './pages/Policies'
 
 function App() {
   return (
@@ -28,6 +29,12 @@ function App() {
         <Route path="reviews" element={<Reviews />} />
         <Route path="faq" element={<Faq />} />
         <Route path="contact" element={<Contact />} />
+
+        {/* Policies */}
+        <Route path="privacy" element={<Privacy />} />
+        <Route path="terms" element={<Terms />} />
+        <Route path="shipping" element={<Shipping />} />
+        <Route path="refunds" element={<Refunds />} />
       </Route>
     </Routes>
     </>

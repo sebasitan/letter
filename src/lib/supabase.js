@@ -6,16 +6,38 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Order functions
-// Note: no .select() after insert — reading back the row would require a
-// public SELECT policy, which we intentionally don't have (keeps customer
-// orders private). The form only needs the insert to succeed.
-export async function createOrder(orderData) {
-  const { error } = await supabase
-    .from('orders')
-    .insert([orderData])
+// Orders go through the place_order() RPC, never a direct insert. The
+// server prices the order from the catalog tables — the client sends ids,
+// not money — and rate-limits by IP. See supabase/orders_secure.sql.
+export async function createOrder(order) {
+  const { data, error } = await supabase.rpc('place_order', {
+    p_customer_name:        order.customerName,
+    p_customer_phone:       order.customerPhone,
+    p_customer_email:       order.customerEmail || '',
+    p_letter_slug:          order.letterSlug,
+    p_recipient_name:       order.recipientName,
+    p_relationship:         order.relationship || '',
+    p_occasion:             order.occasion || '',
+    p_message:              order.message,
+    p_tone:                 order.tone || '',
+    p_letter_lang:          order.letterLang || 'English',
+    p_paper_id:             order.paperId || '',
+    p_ink_id:               order.inkId || '',
+    p_gift_mode:            order.giftMode || 'surprise',
+    p_tier_id:              order.tierId || 'none',
+    p_gift_items:           order.giftItems || [],
+    p_delivery_address:     order.deliveryAddress,
+    p_area:                 order.area || '',
+    p_city:                 order.city || '',
+    p_state:                order.state || '',
+    p_pincode:              order.pincode || '',
+    p_delivery_phone:       order.deliveryPhone || '',
+    p_surprise:             !!order.surprise,
+    p_special_instructions: order.specialInstructions || '',
+  })
 
   if (error) throw error
-  return true
+  return data   // the new order id
 }
 
 // Corporate / bulk enquiry (quote request — no instant payment)
@@ -61,6 +83,20 @@ export async function getCorporateEnquiries() {
 
 export async function updateOrderStatus(id, status) {
   const { error } = await supabase.from('orders').update({ status }).eq('id', id)
+  if (error) throw error
+  return true
+}
+
+export async function updateOrderNotes(id, admin_notes) {
+  const { error } = await supabase.from('orders').update({ admin_notes }).eq('id', id)
+  if (error) throw error
+  return true
+}
+
+// Bulk status change from the admin's selection checkboxes.
+export async function updateOrderStatusBulk(ids, status) {
+  if (!ids?.length) return true
+  const { error } = await supabase.from('orders').update({ status }).in('id', ids)
   if (error) throw error
   return true
 }

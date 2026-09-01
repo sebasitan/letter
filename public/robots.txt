@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /admin
 
-Sitemap: https://letter-rosy-kappa.vercel.app/sitemap.xml
+Sitemap: https://everyours.in/sitemap.xml

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchCatalog, DEFAULT_LETTERS, fetchReviews, DEFAULT_REVIEWS } from '../lib/products'
 import Seo from '../components/Seo'
+import { waLink } from '../lib/contact'
 
 // Emotion-based accent per letter type (visible tint + defined border)
 const letterAccents = {
@@ -150,7 +151,7 @@ function Hero() {
                 </span>
               </Link>
               <a
-                href="https://wa.me/919876543210"
+                href={waLink()}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium rounded-full border transition-all hover:bg-gray-50"
@@ -167,7 +168,7 @@ function Hero() {
             </div>
 
             {/* Trust Badges */}
-            <div className="grid grid-cols-4 gap-3 text-xs" style={{ color: '#6B5050' }}>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-3 gap-y-2.5 text-xs" style={{ color: '#6B5050' }}>
               <span className="flex items-center gap-1">
                 <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -184,13 +185,13 @@ function Hero() {
                 <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span>UPI Accepted</span>
+                <span>Pay after you approve the draft</span>
               </span>
               <span className="flex items-center gap-1">
                 <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
                 </svg>
-                <span>Secure Payments</span>
+                <span>Free revision included</span>
               </span>
             </div>
           </div>
@@ -354,7 +355,7 @@ function TrustBadges() {
             </div>
           </div>
 
-          {/* UPI Accepted */}
+          {/* Pay After Approval */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#FDF5E6' }}>
               <svg className="w-5 h-5" style={{ color: '#C49A2E' }} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -362,8 +363,8 @@ function TrustBadges() {
               </svg>
             </div>
             <div>
-              <h4 className="font-semibold text-sm" style={{ color: '#3D1A1A' }}>UPI Accepted</h4>
-              <p className="text-xs" style={{ color: '#8B7070' }}>Easy & secure payments.</p>
+              <h4 className="font-semibold text-sm" style={{ color: '#3D1A1A' }}>Pay After Approval</h4>
+              <p className="text-xs" style={{ color: '#8B7070' }}>Only once you love the draft.</p>
             </div>
           </div>
 
@@ -514,11 +515,11 @@ function MysteryGift() {
               and a note that says why.
             </h2>
             <p style={{ color: 'rgba(251, 246, 240, 0.65)' }} className="mb-8 leading-relaxed max-w-md text-sm">
-              Every mystery gift comes with a small handwritten card explaining exactly why that gift was chosen for them. That's the heart of Akshar Studio.
+              Every mystery gift comes with a small handwritten card explaining exactly why that gift was chosen for them. That's the heart of Ever Yours.
             </p>
 
             {/* Tier Cards - row of 3 rectangles */}
-            <div className="grid grid-cols-3 gap-3 max-w-xl">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-xl">
               {tiers.map((tier) => (
                 <div
                   key={tier.name}
@@ -573,7 +574,7 @@ function MysteryGift() {
               </p>
 
               <p className="italic text-sm" style={{ color: '#B8893C' }}>
-                — your writers, Akshar Studio
+                — your writers, Ever Yours
               </p>
 
               {/* Heart badge bottom-right */}
@@ -694,6 +695,9 @@ function Testimonials() {
     fetchReviews().then((r) => setReviews(r.slice(0, 3))).catch(() => {})
   }, [])
 
+  // No reviews yet — hide the section rather than show an empty shelf.
+  if (!reviews.length) return null
+
   return (
     <section id="testimonials" className="section-padding bg-cream-100">
       <div className="container-custom">
@@ -777,7 +781,7 @@ function CTA() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
           </Link>
-          <a href="https://wa.me/919876543210" target="_blank" rel="noopener noreferrer" className="btn-secondary bg-white/10 border-white/30 text-white hover:bg-white/20">
+          <a href={waLink()} target="_blank" rel="noopener noreferrer" className="btn-secondary bg-white/10 border-white/30 text-white hover:bg-white/20">
             TALK TO US
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -795,7 +799,7 @@ export default function Home() {
     <>
       <Seo
         title="Handwritten Letters & Curated Gifts in Bangalore"
-        description="Akshar Studio writes heartfelt handwritten calligraphy letters on parchment, paired with curated gifts — love, healing, birthday, apology & family letters. Same-day delivery in Bangalore."
+        description="Ever Yours writes heartfelt handwritten calligraphy letters on parchment, paired with curated gifts — love, healing, birthday, apology & family letters. Same-day delivery in Bangalore."
         path="/"
       />
       <Hero />

@@ -342,3 +342,47 @@
 ::-webkit-scrollbar-thumb:hover {
   background-color: rgba(74, 29, 31, 0.5);
 }
+
+/* ============================================================
+   Mobile-first baseline
+   Most of this site's traffic is phones (Instagram + WhatsApp),
+   so these rules protect the small screen by default.
+   ============================================================ */
+
+/* iOS Safari zooms the whole page when you focus a field whose text is
+   under 16px. Force 16px on phones — it stops the jarring zoom-and-pan
+   on every input, and applies to any field added later too. */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Comfortable hit areas for the footer's dense link lists.
+   18px-tall text links are hard to hit accurately with a thumb. */
+@media (max-width: 767px) {
+  footer li > a {
+    display: inline-block;
+    padding-block: 0.3rem;
+  }
+}
+
+/* Long words (pincodes, URLs, unbroken Tamil/Hindi strings) should wrap
+   rather than force the page to scroll sideways. */
+body {
+  overflow-wrap: break-word;
+}
+
+/* Respect users who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

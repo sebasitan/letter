@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { createCorporateEnquiry } from '../lib/supabase'
 import Seo from '../components/Seo'
+import { waLink } from '../lib/contact'
 
 const useCases = [
   { icon: '🎂', title: 'Birthdays & Anniversaries', desc: 'Celebrate every employee’s special day with a handwritten note.' },
@@ -68,7 +69,7 @@ export default function Corporate() {
   const inputStyle = { border: '1px solid #E3D5C8', color: '#3D1A1A' }
 
   if (submitted) {
-    const wa = `https://wa.me/919876543210?text=${encodeURIComponent(`Hi Akshar Studio! I just sent a corporate enquiry for ${form.companyName} (${form.quantityRange || ''} ${form.occasion || 'letters'}). Looking forward to the quote.`)}`
+    const wa = waLink(`Hi Ever Yours! I just sent a corporate enquiry for ${form.companyName} (${form.quantityRange || ''} ${form.occasion || 'letters'}). Looking forward to the quote.`)
     return (
       <div style={{ backgroundColor: '#FBF6F0' }} className="min-h-screen flex items-center justify-center p-4">
         <div className="bg-white rounded-3xl p-8 md:p-12 max-w-lg text-center" style={{ boxShadow: '0 20px 50px rgba(140,90,60,0.15)' }}>

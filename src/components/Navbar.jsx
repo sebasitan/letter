@@ -25,7 +25,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link to="/" className="flex flex-col">
-            <span className="font-playfair text-xl md:text-2xl font-bold text-ink">Akshar Studio</span>
+            <span className="font-playfair text-xl md:text-2xl font-bold text-ink">Ever Yours</span>
             <span className="text-xs text-ink/60 -mt-1 italic">words. handwriting. emotions.</span>
           </Link>
 

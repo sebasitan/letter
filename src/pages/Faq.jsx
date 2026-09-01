@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchFaqs, DEFAULT_FAQS } from '../lib/products'
 import Seo from '../components/Seo'
+import { waLink } from '../lib/contact'
 
 function AccordionItem({ q, a, open, onToggle }) {
   return (
@@ -73,7 +74,7 @@ export default function Faq() {
 
   return (
     <div style={{ backgroundColor: '#FBF6F0' }} className="min-h-screen">
-      <Seo title="FAQs" description="Answers about ordering, delivery, personalisation, languages and payment for Akshar Studio handwritten letters & gifts." path="/faq" />
+      <Seo title="FAQs" description="Answers about ordering, delivery, personalisation, languages and payment for Ever Yours handwritten letters & gifts." path="/faq" />
       {/* Hero */}
       <section style={{ backgroundColor: '#451A1C' }} className="py-16 md:py-20">
         <div className="max-w-2xl mx-auto px-6 text-center">
@@ -126,7 +127,7 @@ export default function Faq() {
             <h3 className="font-playfair text-xl font-bold mb-2" style={{ color: '#FBF6F0' }}>Still have a question?</h3>
             <p className="text-sm mb-5" style={{ color: 'rgba(251,246,240,0.7)' }}>We're happy to help — reach us on WhatsApp or send a message.</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <a href="https://wa.me/919876543210" target="_blank" rel="noopener noreferrer"
+              <a href={waLink()} target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold rounded-full" style={{ backgroundColor: '#25D366', color: 'white' }}>
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.555 4.121 1.522 5.855L.058 23.568a.5.5 0 00.612.612l5.713-1.464A11.948 11.948 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0z" /></svg>
                 Chat on WhatsApp

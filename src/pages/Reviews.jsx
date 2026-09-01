@@ -20,7 +20,7 @@ export default function Reviews() {
 
   return (
     <div style={{ backgroundColor: '#FBF6F0' }} className="min-h-screen">
-      <Seo title="Reviews" description="Real reactions from customers who finally found the words they couldn't say. Read Akshar Studio handwritten-letter reviews." path="/reviews" />
+      <Seo title="Reviews" description="Real reactions from customers who finally found the words they couldn't say. Read Ever Yours handwritten-letter reviews." path="/reviews" />
       {/* Hero */}
       <section style={{ backgroundColor: '#451A1C' }} className="py-16 md:py-20">
         <div className="max-w-3xl mx-auto px-6 text-center">
@@ -29,12 +29,18 @@ export default function Reviews() {
             Words that <span className="italic" style={{ color: '#E0A93C' }}>landed.</span>
           </h1>
           <p className="text-base md:text-lg leading-relaxed mb-4" style={{ color: 'rgba(251,246,240,0.75)' }}>
-            Real letters, real reactions — from people who couldn't find the words until we did.
+            {reviews.length > 0
+              ? "Real letters, real reactions — from people who couldn't find the words until we did."
+              : 'Every word on this page will come from a real customer. Nothing invented, nothing borrowed.'}
           </p>
-          <div className="inline-flex items-center gap-2 text-sm" style={{ color: '#E0A93C' }}>
-            <Stars n={5} /> <span style={{ color: '#FBF6F0' }} className="font-bold">{avg}</span>
-            <span style={{ color: 'rgba(251,246,240,0.6)' }}>· {reviews.length} happy customers</span>
-          </div>
+          {reviews.length > 0 && (
+            <div className="inline-flex items-center gap-2 text-sm" style={{ color: '#E0A93C' }}>
+              <Stars n={5} /> <span style={{ color: '#FBF6F0' }} className="font-bold">{avg}</span>
+              <span style={{ color: 'rgba(251,246,240,0.6)' }}>
+                · {reviews.length} {reviews.length === 1 ? 'happy customer' : 'happy customers'}
+              </span>
+            </div>
+          )}
         </div>
       </section>
 
@@ -42,7 +48,22 @@ export default function Reviews() {
       <section className="py-16 md:py-20">
         <div className="max-w-6xl mx-auto px-6">
           {reviews.length === 0 ? (
-            <p className="text-center" style={{ color: '#A8968C' }}>No reviews yet.</p>
+            <div className="max-w-lg mx-auto text-center py-8">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5" style={{ backgroundColor: '#F5EDE4' }}>
+                <span className="text-3xl">✍️</span>
+              </div>
+              <h2 className="font-playfair text-2xl font-bold mb-3" style={{ color: '#3D1A1A' }}>
+                We're just getting started.
+              </h2>
+              <p className="text-base leading-relaxed" style={{ color: '#7A6258' }}>
+                Ever Yours is new, so there's nothing here yet — and we'd rather show
+                you an empty page than borrowed words. Every review below will be from a
+                real person who let us write something for them.
+              </p>
+              <p className="text-base leading-relaxed mt-4" style={{ color: '#7A6258' }}>
+                Be the first. Your letter is written by hand before you pay a rupee.
+              </p>
+            </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {reviews.map((r) => (
