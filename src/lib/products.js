@@ -208,3 +208,12 @@ export async function seedTable(table) {
   if (error) throw error
   return true
 }
+
+/** Row counts for the manager's sub-tab badges. Cheap: head-only requests. */
+export async function adminCounts(tables) {
+  const entries = await Promise.all(tables.map(async (t) => {
+    const { count, error } = await supabase.from(t).select('*', { count: 'exact', head: true })
+    return [t, error ? null : count]
+  }))
+  return Object.fromEntries(entries)
+}

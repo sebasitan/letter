@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { adminFetch, adminUpsert, adminDelete, seedTable } from '../lib/products'
+import { adminFetch, adminUpsert, adminDelete, seedTable, adminCounts } from '../lib/products'
 
 // Field schema per product table
 const SCHEMAS = {
@@ -187,13 +187,73 @@ function EditForm({ table, row, onSave, onCancel, isNew }) {
   )
 }
 
+// A thumbnail that works for every table: the real image where there is one,
+// the actual colour for paper and ink, emoji otherwise. A products screen
+// without pictures is just a spreadsheet.
+function Thumb({ table, row }) {
+  const base = 'w-14 h-14 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden'
+  if (row.image) {
+    return (
+      <div className={base} style={{ backgroundColor: '#F5EDE4' }}>
+        <img src={row.image} alt="" loading="lazy" className="w-full h-full object-cover"
+          onError={(e) => { e.currentTarget.style.display = 'none' }} />
+      </div>
+    )
+  }
+  if (table === 'paper_types' || table === 'ink_colors') {
+    return <div className={base} style={{ backgroundColor: row.bg || row.hex || '#F5EDE4', border: '1px solid #E3D5C8' }} />
+  }
+  return (
+    <div className={base} style={{ backgroundColor: '#F5EDE4', fontSize: '1.5rem' }}>
+      {row.emoji || (row.rating ? '★' : row.question ? '?' : '•')}
+    </div>
+  )
+}
+
+function Badge({ bg, fg, children }) {
+  return (
+    <span className="text-[10px] px-2 py-0.5 rounded-full font-medium whitespace-nowrap"
+      style={{ backgroundColor: bg, color: fg }}>{children}</span>
+  )
+}
+
+/** The one-line summary under a row's name — different per table. */
+function summarise(table, row, schema) {
+  const bits = []
+  if (table === 'reviews') {
+    bits.push((row.rating || 0) + '★')
+    if (row.location) bits.push(row.location)
+    if (row.letter_type) bits.push(row.letter_type)
+  } else if (table === 'faqs') {
+    if (row.category) bits.push(row.category)
+  } else {
+    if (row.price != null) bits.push('₹' + row.price)
+    if (row.cost_price != null && row.cost_price > 0) {
+      bits.push('cost ₹' + row.cost_price)
+      if (row.price != null) {
+        const margin = row.price - row.cost_price
+        const pct = row.price > 0 ? Math.round((margin / row.price) * 100) : 0
+        bits.push('margin ₹' + margin + ' (' + pct + '%)')
+      }
+    }
+  }
+  bits.push(String(row[schema.idKey]))
+  return bits.filter(Boolean).join('  ·  ')
+}
+
 export default function ProductsManager({ only }) {
   const tables = only ? [only] : PRODUCT_TABLES
   const [table, setTable] = useState(tables[0])
   const [rows, setRows] = useState([])
+  const [counts, setCounts] = useState({})
   const [loading, setLoading] = useState(true)
+  const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [editing, setEditing] = useState(null) // row or 'new'
+
+  // Toolbar
+  const [q, setQ] = useState('')
+  const [vis, setVis] = useState('all')   // all | active | hidden
 
   const schema = SCHEMAS[table]
 
@@ -203,26 +263,72 @@ export default function ProductsManager({ only }) {
     catch (e) { setError(e?.message || 'Could not load'); setRows([]) }
     finally { setLoading(false) }
   }
-  useEffect(() => { load() }, [table])
+  useEffect(() => { load(); setQ(''); setVis('all') }, [table])
+
+  // Tab badges. A failed count must never block the screen.
+  const refreshCounts = () => {
+    if (tables.length > 1) adminCounts(tables).then(setCounts).catch(() => {})
+  }
+  useEffect(refreshCounts, [])
+
+  const after = () => { load(); refreshCounts() }
 
   const onSave = async (draft) => {
     await adminUpsert(table, draft)
     setEditing(null)
-    load()
+    after()
   }
+
   const onDelete = async (row) => {
-    if (!confirm(`Delete "${row.name || row.question}"? This cannot be undone.`)) return
+    const name = row.name || row.question || row[schema.idKey]
+    if (!confirm('Delete "' + name + '"? This cannot be undone.\n\nTo take it off the site without losing it, use Hide instead.')) return
     await adminDelete(table, schema.idKey, row[schema.idKey])
-    load()
+    after()
   }
+
   const onToggle = async (row) => {
     await adminUpsert(table, { ...row, is_active: !row.is_active })
-    load()
+    after()
   }
+
   const onSeed = async () => {
     if (!confirm('Import the current default products into this table?')) return
-    await seedTable(table); load()
+    await seedTable(table); after()
   }
+
+  // Reorder by renumbering the whole list — immune to the duplicate or
+  // missing sort_order values that seeded and hand-edited rows end up with.
+  const move = async (row, dir) => {
+    const i = rows.findIndex((r) => r[schema.idKey] === row[schema.idKey])
+    const j = i + dir
+    if (i < 0 || j < 0 || j >= rows.length) return
+    const next = [...rows]
+    const tmp = next[i]; next[i] = next[j]; next[j] = tmp
+    setRows(next.map((r, idx) => ({ ...r, sort_order: idx + 1 })))   // optimistic
+    setBusy(true)
+    try {
+      await Promise.all(next.map((r, idx) => adminUpsert(table, { ...r, sort_order: idx + 1 })))
+    } catch (e) {
+      setError(e?.message || 'Could not save the new order')
+    } finally {
+      setBusy(false); load()
+    }
+  }
+
+  // ── Filtering ──────────────────────────────────────────────
+  const needle = q.trim().toLowerCase()
+  const shown = rows.filter((r) => {
+    if (vis === 'active' && !r.is_active) return false
+    if (vis === 'hidden' && r.is_active) return false
+    if (!needle) return true
+    return [r.name, r.question, r.answer, r.description, r.quote, r.supplier,
+            r.category, r.location, r[schema.idKey]]
+      .filter(Boolean).some((v) => String(v).toLowerCase().includes(needle))
+  })
+
+  // Arrows only make sense against the full, unfiltered list.
+  const canReorder = !needle && vis === 'all' && rows.length > 1
+  const hiddenCount = rows.filter((r) => !r.is_active).length
 
   return (
     <div>
@@ -234,61 +340,136 @@ export default function ProductsManager({ only }) {
               className="px-3 py-1.5 rounded-full text-sm font-medium"
               style={table === t ? { backgroundColor: '#451A1C', color: '#E0A93C' } : { backgroundColor: '#F0E6DC', color: '#5C3A2E' }}>
               {SCHEMAS[t].label}
+              {counts[t] != null && <span className="ml-1.5 opacity-60">{counts[t]}</span>}
             </button>
           ))}
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-sm" style={{ color: '#A8968C' }}>{rows.length} item{rows.length !== 1 ? 's' : ''}</p>
-        <div className="flex gap-2">
-          {rows.length === 0 && !loading && (
-            <button onClick={onSeed} className="px-4 py-2 text-sm font-semibold rounded-full" style={{ backgroundColor: '#C49A2E', color: '#451A1C' }}>
-              ↓ Import current defaults
-            </button>
-          )}
-          <button onClick={() => setEditing('new')} className="px-4 py-2 text-sm font-semibold rounded-full" style={{ backgroundColor: '#9D4433', color: 'white' }}>+ Add</button>
+      {/* Toolbar */}
+      <div className="bg-white rounded-2xl p-3 mb-3" style={{ border: '1px solid #F0E6DC' }}>
+        <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+          <input
+            value={q} onChange={(e) => setQ(e.target.value)}
+            placeholder={'Search ' + schema.label.toLowerCase() + '…'}
+            className="flex-1 px-4 py-2.5 rounded-xl bg-white outline-none text-sm" style={inputStyle} />
+          <select value={vis} onChange={(e) => setVis(e.target.value)}
+            className="px-3 py-2.5 rounded-xl bg-white outline-none text-sm" style={inputStyle}>
+            <option value="all">All ({rows.length})</option>
+            <option value="active">Live ({rows.length - hiddenCount})</option>
+            <option value="hidden">Hidden ({hiddenCount})</option>
+          </select>
+          <button onClick={() => setEditing('new')}
+            className="px-5 py-2.5 text-sm font-semibold rounded-full whitespace-nowrap"
+            style={{ backgroundColor: '#9D4433', color: 'white' }}>+ Add</button>
         </div>
+        <p className="text-xs mt-2" style={{ color: '#A8968C' }}>
+          Showing {shown.length} of {rows.length}
+          {canReorder
+            ? ' · reorder with ↑ ↓ — this is the order customers see'
+            : rows.length > 1 ? ' · clear the search to reorder' : ''}
+          {busy && ' · saving…'}
+        </p>
       </div>
 
       {error && <div className="rounded-xl p-3 mb-3 text-sm" style={{ backgroundColor: '#FBE9E4', color: '#9D4433' }}>{error}</div>}
       {loading && <p style={{ color: '#A8968C' }}>Loading…</p>}
 
-      {!loading && rows.map((row) => (
-        <div key={row[schema.idKey]} className="bg-white rounded-xl p-4 mb-2 flex items-center justify-between gap-3" style={{ border: '1px solid #F0E6DC', opacity: row.is_active ? 1 : 0.55 }}>
-          <div className="flex items-center gap-3 min-w-0">
-            <span className="text-lg">{row.emoji || (row.rating ? '★' : '•')}</span>
-            <div className="min-w-0">
-              <p className="font-semibold text-sm truncate" style={{ color: '#3D1A1A' }}>{row.name || row.question}</p>
-              <p className="text-xs truncate" style={{ color: '#A8968C' }}>
-                {[
-                  row.price != null && `₹${row.price}`,
-                  row.cost_price != null && `cost ₹${row.cost_price}`,
-                  (row.price != null && row.cost_price != null) && `margin ₹${row.price - row.cost_price}`,
-                  row.rating != null && `${row.rating}★`,
-                  row.letter_type || row.location,
-                ].filter(Boolean).join(' · ') || row[schema.idKey]}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {row.source_url && (
-              <a href={row.source_url} target="_blank" rel="noopener noreferrer" className="text-xs px-2.5 py-1 rounded-full" style={{ backgroundColor: '#EAF1EC', color: '#2E7D52' }}>Buy ↗</a>
-            )}
-            <button onClick={() => onToggle(row)} className="text-xs px-2.5 py-1 rounded-full"
-              style={row.is_active ? { backgroundColor: '#E5F0E8', color: '#2E7D52' } : { backgroundColor: '#F0E6DC', color: '#A8968C' }}>
-              {row.is_active ? 'Active' : 'Hidden'}
+      {/* Empty — nothing in the table at all */}
+      {!loading && rows.length === 0 && (
+        <div className="bg-white rounded-2xl p-8 text-center" style={{ border: '1px solid #F0E6DC' }}>
+          <p className="font-semibold mb-1" style={{ color: '#3D1A1A' }}>Nothing here yet</p>
+          <p className="text-sm mb-5" style={{ color: '#A8968C' }}>
+            {PRODUCT_TABLES.includes(table)
+              ? 'Orders are priced from this table — the order form rejects orders until it has rows.'
+              : 'Add your first entry, or import the defaults to start from.'}
+          </p>
+          <div className="flex gap-2 justify-center flex-wrap">
+            <button onClick={onSeed} className="px-5 py-2.5 text-sm font-semibold rounded-full" style={{ backgroundColor: '#C49A2E', color: '#451A1C' }}>
+              ↓ Import current defaults
             </button>
-            <button onClick={() => setEditing(row)} className="text-xs px-3 py-1 rounded-full" style={{ border: '1px solid #E3D5C8', color: '#5C3A2E' }}>Edit</button>
-            <button onClick={() => onDelete(row)} className="text-xs px-3 py-1 rounded-full" style={{ border: '1px solid #E8C4B8', color: '#9D4433' }}>Delete</button>
+            <button onClick={() => setEditing('new')} className="px-5 py-2.5 text-sm font-semibold rounded-full" style={{ border: '1px solid #E3D5C8', color: '#5C3A2E' }}>
+              + Add manually
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Empty — filters hid everything */}
+      {!loading && rows.length > 0 && shown.length === 0 && (
+        <div className="bg-white rounded-2xl p-8 text-center" style={{ border: '1px solid #F0E6DC' }}>
+          <p className="text-sm" style={{ color: '#A8968C' }}>Nothing matches that.</p>
+          <button onClick={() => { setQ(''); setVis('all') }} className="text-sm mt-2 underline" style={{ color: '#9D4433' }}>Clear filters</button>
+        </div>
+      )}
+
+      {/* Rows */}
+      {!loading && shown.map((row, idx) => (
+        <div key={row[schema.idKey]} className="bg-white rounded-2xl p-4 mb-2"
+          style={{ border: '1px solid #F0E6DC', opacity: row.is_active ? 1 : 0.6 }}>
+          <div className="flex gap-3">
+            <Thumb table={table} row={row} />
+
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start gap-2 flex-wrap">
+                <p className="font-semibold text-sm" style={{ color: '#3D1A1A' }}>
+                  {row.name || row.question || row[schema.idKey]}
+                </p>
+                {row.is_bestseller && <Badge bg="#FBEFD6" fg="#8A6A16">Bestseller</Badge>}
+                {row.personalised && <Badge bg="#EDE7F5" fg="#5B4A87">Personalised</Badge>}
+                {!row.is_active && <Badge bg="#F0E6DC" fg="#8A7A70">Hidden</Badge>}
+              </div>
+
+              <p className="text-xs mt-1" style={{ color: '#A8968C' }}>{summarise(table, row, schema)}</p>
+
+              {(row.description || row.answer || row.quote) && (
+                <p className="text-xs mt-1.5" style={{ color: '#5C3A2E', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  {row.description || row.answer || row.quote}
+                </p>
+              )}
+
+              {row.supplier && <p className="text-xs mt-1.5" style={{ color: '#A8968C' }}>🔒 {row.supplier}</p>}
+            </div>
+
+            {canReorder && (
+              <div className="flex flex-col gap-1 flex-shrink-0">
+                <button onClick={() => move(row, -1)} disabled={idx === 0 || busy}
+                  aria-label="Move up" className="w-7 h-7 rounded-lg text-xs disabled:opacity-25"
+                  style={{ border: '1px solid #E3D5C8', color: '#5C3A2E' }}>↑</button>
+                <button onClick={() => move(row, 1)} disabled={idx === shown.length - 1 || busy}
+                  aria-label="Move down" className="w-7 h-7 rounded-lg text-xs disabled:opacity-25"
+                  style={{ border: '1px solid #E3D5C8', color: '#5C3A2E' }}>↓</button>
+              </div>
+            )}
+          </div>
+
+          {/* Actions on their own row, so they never squash the name on a phone */}
+          <div className="flex items-center gap-2 flex-wrap mt-3 pt-3" style={{ borderTop: '1px solid #F7F1EA' }}>
+            <button onClick={() => onToggle(row)} className="text-xs px-3 py-1.5 rounded-full"
+              style={row.is_active ? { backgroundColor: '#E5F0E8', color: '#2E7D52' } : { backgroundColor: '#F0E6DC', color: '#8A7A70' }}>
+              {row.is_active ? '● Live' : '○ Hidden'}
+            </button>
+            <button onClick={() => setEditing(row)} className="text-xs px-4 py-1.5 rounded-full" style={{ border: '1px solid #E3D5C8', color: '#5C3A2E' }}>Edit</button>
+            {row.source_url && (
+              <a href={row.source_url} target="_blank" rel="noopener noreferrer"
+                className="text-xs px-3 py-1.5 rounded-full" style={{ backgroundColor: '#EAF1EC', color: '#2E7D52' }}>Buy ↗</a>
+            )}
+            <button onClick={() => onDelete(row)} className="text-xs px-4 py-1.5 rounded-full ml-auto" style={{ border: '1px solid #E8C4B8', color: '#9D4433' }}>Delete</button>
           </div>
         </div>
       ))}
 
+      {/* Seeding stays reachable once there are rows, for a partly-filled table */}
+      {!loading && rows.length > 0 && PRODUCT_TABLES.includes(table) && (
+        <button onClick={onSeed} className="text-xs mt-2 underline" style={{ color: '#A8968C' }}>
+          Import any missing defaults
+        </button>
+      )}
+
       {editing && (
         <EditForm
           table={table}
-          row={editing === 'new' ? emptyRow(table) : editing}
+          row={editing === 'new' ? { ...emptyRow(table), sort_order: rows.length + 1 } : editing}
           isNew={editing === 'new'}
           onSave={onSave}
           onCancel={() => setEditing(null)}
