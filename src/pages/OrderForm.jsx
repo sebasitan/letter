@@ -207,6 +207,10 @@ export default function OrderForm() {
   // so they are deliberately not treated as answerable here.
   const needsCustom = (g) => g.personalisation_type === 'name' || g.personalisation_type === 'date'
 
+  // 'whatsapp' means a human collects the detail later. Told, not asked —
+  // an unanswered PERSONALISED badge reads as a broken form.
+  const tellsOnWhatsApp = (g) => g.personalisation_type === 'whatsapp'
+
   const cfg = letterConfig[formData.letterType] || null
   const selectedTier = mysteryTiers.find(t => t.id === formData.mysteryTier)
   // selected gifts with their quantities
@@ -503,6 +507,21 @@ export default function OrderForm() {
             </p>
             <p className="text-2xl font-bold" style={{ color: '#3D1A1A' }}>₹{confirmedTotal.toLocaleString()}</p>
           </div>
+
+          {/* The one thing the order form couldn't collect. Said here, while
+              they are still on the page and the WhatsApp button is right below. */}
+          {selectedGifts.some(tellsOnWhatsApp) && (
+            <div className="rounded-xl p-4 mb-4 text-left" style={{ backgroundColor: '#EAF7EE', border: '1px solid #B9E3C6' }}>
+              <p className="text-sm font-semibold mb-1" style={{ color: '#1B6B3A' }}>
+                📸 One more thing — send us the photo
+              </p>
+              <p className="text-xs" style={{ color: '#2E5C42' }}>
+                Your {selectedGifts.filter(tellsOnWhatsApp).map(g => g.name).join(' and ')} needs a
+                picture from you. Send it on WhatsApp below and we'll confirm it with your draft —
+                we can't start printing until we have it.
+              </p>
+            </div>
+          )}
 
           <p className="text-sm mb-4" style={{ color: '#7A6258' }}>
             Tap below so we can reach you on WhatsApp — it's how we send your draft.
@@ -1048,6 +1067,14 @@ export default function OrderForm() {
                                     />
                                     <p className="text-[9px] mt-1 text-right" style={{ color: (formData.giftCustom[gift.id] || '').length >= (gift.personalisation_max || 20) ? '#9D4433' : '#A8968C' }}>
                                       {(formData.giftCustom[gift.id] || '').length} / {gift.personalisation_max || 20}
+                                    </p>
+                                  </div>
+                                )}
+
+                                {active && tellsOnWhatsApp(gift) && (
+                                  <div className="mt-2 pt-2 text-left" style={{ borderTop: '1px dashed #E3D5C8' }}>
+                                    <p className="text-[10px] leading-snug" style={{ color: '#1FA855' }}>
+                                      💬 {gift.personalisation_label || "We'll ask for your photo on WhatsApp"}
                                     </p>
                                   </div>
                                 )}
