@@ -115,6 +115,7 @@ export default function OrderForm() {
     giftMode: 'surprise', // 'surprise' | 'choose'
     mysteryTier: 'none',
     giftQty: {}, // { giftId: quantity } when giftMode === 'choose'
+    giftCustom: {}, // { giftId: 'name to engrave' } for personalised gifts
     deliveryAddress: '',
     area: '',
     city: '',
@@ -146,6 +147,12 @@ export default function OrderForm() {
       if (!formData.messageToWrite.trim()) return "Tell us what you'd like the letter to say — even a few rough lines are enough, we'll shape them."
       if (!formData.customerName.trim()) return 'Please add your name so we know who to write back to.'
       if (!/^[\d+\s-]{10,}$/.test(formData.customerPhone.trim())) return 'Please add a valid WhatsApp number — that is where your draft goes.'
+    }
+    if (n === 2) {
+      // A personalised gift with nothing to engrave becomes a phone call at
+      // best and a ruined gift at worst. Ask now, while they are still here.
+      const blank = selectedGifts.find(g => needsCustom(g) && !g.custom)
+      if (blank) return `What should we engrave on the ${blank.name}?`
     }
     return ''
   }
@@ -195,12 +202,17 @@ export default function OrderForm() {
   // Pincode auto-lookup (India Post API)
   const [pinStatus, setPinStatus] = useState({ loading: false, error: '', areas: [] })
 
+  // A gift needs text from the customer when the admin configured a
+  // question for it. 'photo' and 'link' need an upload we don't have yet,
+  // so they are deliberately not treated as answerable here.
+  const needsCustom = (g) => g.personalisation_type === 'name' || g.personalisation_type === 'date'
+
   const cfg = letterConfig[formData.letterType] || null
   const selectedTier = mysteryTiers.find(t => t.id === formData.mysteryTier)
   // selected gifts with their quantities
   const selectedGifts = giftCatalog
     .filter(g => (formData.giftQty[g.id] || 0) > 0)
-    .map(g => ({ ...g, qty: formData.giftQty[g.id] }))
+    .map(g => ({ ...g, qty: formData.giftQty[g.id], custom: (formData.giftCustom[g.id] || '').trim() }))
   const giftCount = selectedGifts.reduce((sum, g) => sum + g.qty, 0)
   const giftTotal = formData.letterType === 'mystery'
     ? 0
@@ -227,10 +239,15 @@ export default function OrderForm() {
     const current = prev.giftQty[id] || 0
     const next = Math.max(0, current + delta)
     const giftQty = { ...prev.giftQty }
-    if (next === 0) delete giftQty[id]
+    const giftCustom = { ...prev.giftCustom }
+    if (next === 0) { delete giftQty[id]; delete giftCustom[id] }
     else giftQty[id] = next
-    return { ...prev, giftQty }
+    return { ...prev, giftQty, giftCustom }
   })
+
+  const setGiftCustom = (id, value) => setFormData(prev => ({
+    ...prev, giftCustom: { ...prev.giftCustom, [id]: value },
+  }))
 
   // ── Pincode → auto-fill city & state (India Post API) ──
   const handlePincodeChange = async (e) => {
@@ -389,7 +406,7 @@ export default function OrderForm() {
         inkId: formData.inkColor,
         giftMode: formData.giftMode,
         tierId: formData.mysteryTier,
-        giftItems: selectedGifts.map(g => ({ id: g.id, qty: g.qty })),
+        giftItems: selectedGifts.map(g => ({ id: g.id, qty: g.qty, custom: g.custom || '' })),
         deliveryAddress: formData.deliveryAddress,
         area: formData.area,
         city: formData.city,
@@ -1012,6 +1029,28 @@ export default function OrderForm() {
                                     style={{ backgroundColor: '#F5EDE4', color: '#9D4433' }}
                                   >+ Add</button>
                                 )}
+
+                                {/* Asked here, on the gift itself — not on a later
+                                    screen where it reads as an afterthought. */}
+                                {active && needsCustom(gift) && (
+                                  <div className="mt-2 pt-2" style={{ borderTop: '1px dashed #E3D5C8' }}>
+                                    <label className="block text-[10px] font-semibold mb-1 text-left" style={{ color: '#9D4433' }}>
+                                      {gift.personalisation_label || 'Name to engrave'}
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={formData.giftCustom[gift.id] || ''}
+                                      onChange={(e) => setGiftCustom(gift.id, e.target.value.slice(0, gift.personalisation_max || 20))}
+                                      maxLength={gift.personalisation_max || 20}
+                                      placeholder={gift.personalisation_type === 'date' ? 'e.g. 14 Feb 2020' : 'e.g. Jency'}
+                                      className="w-full px-2 py-1.5 rounded-lg text-xs outline-none"
+                                      style={{ border: '1px solid #E3D5C8', color: '#3D1A1A' }}
+                                    />
+                                    <p className="text-[9px] mt-1 text-right" style={{ color: (formData.giftCustom[gift.id] || '').length >= (gift.personalisation_max || 20) ? '#9D4433' : '#A8968C' }}>
+                                      {(formData.giftCustom[gift.id] || '').length} / {gift.personalisation_max || 20}
+                                    </p>
+                                  </div>
+                                )}
                               </div>
                             )
                           })}
@@ -1257,6 +1296,13 @@ export default function OrderForm() {
                         </span>
                         <span style={{ color: '#FBF6F0' }}>₹{(g.price * g.qty).toLocaleString()}</span>
                       </div>
+                    ))}
+
+                    {/* Last chance to spot a typo before it is engraved */}
+                    {formData.giftMode === 'choose' && selectedGifts.filter(g => g.custom).map((g) => (
+                      <p key={g.id + '-custom'} className="text-xs -mt-1 pl-6" style={{ color: '#E0A93C' }}>
+                        ↳ engraving: “{g.custom}”
+                      </p>
                     ))}
                   </div>
 

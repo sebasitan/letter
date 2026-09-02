@@ -33,7 +33,10 @@ const SCHEMAS = {
       { k: 'price', label: 'Selling price (₹)', type: 'number' },
       { k: 'emoji', label: 'Emoji', type: 'text' },
       { k: 'image', label: 'Image URL', type: 'text' },
-      { k: 'personalised', label: 'Personalised', type: 'bool' },
+      { k: 'personalised', label: 'Personalised (shows the badge)', type: 'bool' },
+      { k: 'personalisation_type', label: 'Ask the customer for', type: 'select', options: ['none', 'name', 'date'] },
+      { k: 'personalisation_label', label: 'Question shown (e.g. Name to engrave)', type: 'text' },
+      { k: 'personalisation_max', label: 'Max characters', type: 'number' },
       { k: 'cost_price', label: '🔒 Cost price (₹) — admin only', type: 'number' },
       { k: 'supplier', label: '🔒 Supplier — admin only', type: 'text' },
       { k: 'source_url', label: '🔒 Buy link / source URL — admin only', type: 'text' },
@@ -108,7 +111,8 @@ function emptyRow(table) {
   const r = {}
   for (const f of SCHEMAS[table].fields) {
     r[f.k] = f.type === 'bool' ? (f.k === 'is_active')
-      : f.type === 'number' ? (f.k === 'rating' ? 5 : 0)
+      : f.type === 'number' ? (f.k === 'rating' ? 5 : f.k === 'personalisation_max' ? 20 : 0)
+      : f.type === 'select' ? f.options[0]
       : f.type === 'list' ? []
       : f.type === 'accent' ? { tint: '#FBE3DB', icon: '#B5593A', border: '#E2A18E', glow: 'rgba(0,0,0,0.2)' }
       : ''
@@ -149,6 +153,11 @@ function EditForm({ table, row, onSave, onCancel, isNew }) {
                     <input type="checkbox" checked={!!draft[f.k]} onChange={(e) => set(f.k, e.target.checked)} style={{ accentColor: '#9D4433' }} />
                     <span className="text-sm" style={{ color: '#5C3A2E' }}>{draft[f.k] ? 'Yes' : 'No'}</span>
                   </label>
+                )}
+                {f.type === 'select' && (
+                  <select value={draft[f.k] || f.options[0]} onChange={(e) => set(f.k, e.target.value)} className={inputCls} style={inputStyle}>
+                    {f.options.map((o) => <option key={o} value={o}>{o}</option>)}
+                  </select>
                 )}
                 {f.type === 'color' && (
                   <div className="flex items-center gap-2">

@@ -86,9 +86,9 @@ export const DEFAULT_GIFTS = [
   { id: 'chocolates', name: 'Premium Chocolates', description: 'Handpicked box', price: 299, emoji: '🍫', image: '/images/gifts/chocolates.png', personalised: false, sort_order: 3 },
   { id: 'succulent', name: 'Mini Succulent', description: 'A living keepsake', price: 249, emoji: '🪴', image: '/images/gifts/succulent.png', personalised: false, sort_order: 4 },
   { id: 'photo-frame', name: 'Photo Frame', description: 'Personalised • your photo framed', price: 499, emoji: '🖼️', image: '/images/gifts/photo-frame.png', personalised: true, sort_order: 5 },
-  { id: 'keychain', name: 'Name Keychain', description: 'Personalised • engraved name', price: 199, emoji: '🔑', image: '/images/gifts/keychain.png', personalised: true, sort_order: 6 },
+  { id: 'keychain', name: 'Name Keychain', description: 'Personalised • engraved name', price: 199, emoji: '🔑', image: '/images/gifts/keychain.png', personalised: true, personalisation_type: 'name', personalisation_label: 'Name to engrave', personalisation_max: 12, sort_order: 6 },
   { id: 'bracelet', name: 'Minimalist Bracelet', description: 'Dainty & elegant', price: 399, emoji: '📿', image: '/images/gifts/bracelet.png', personalised: false, sort_order: 7 },
-  { id: 'song-plaque', name: 'Song Plaque', description: 'Personalised • scan to play', price: 449, emoji: '🎵', image: '/images/gifts/song-plaque.png', personalised: true, sort_order: 8 },
+  { id: 'song-plaque', name: 'Song Plaque', description: 'Personalised • scan to play', price: 449, emoji: '🎵', image: '/images/gifts/song-plaque.png', personalised: true, personalisation_type: 'name', personalisation_label: 'Song name and artist', personalisation_max: 40, sort_order: 8 },
 ]
 
 export const DEFAULT_PAPERS = [
@@ -167,7 +167,7 @@ async function fetchActive(table, defaults, columns = '*') {
 }
 
 // Customer-safe gift columns (never exposes cost_price / supplier / source_url)
-const GIFT_PUBLIC_COLS = 'id,name,description,price,emoji,image,personalised,is_active,sort_order'
+const GIFT_PUBLIC_COLS = 'id,name,description,price,emoji,image,personalised,personalisation_type,personalisation_label,personalisation_max,is_active,sort_order'
 
 export async function fetchCatalog() {
   const [letters, gifts, papers, inks, tiers] = await Promise.all([
