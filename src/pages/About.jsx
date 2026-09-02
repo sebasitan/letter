@@ -70,7 +70,7 @@ export default function About() {
             </div>
             <div className="relative">
               <img
-                src="/images/Elegant black and gold fountain pen.png"
+                src="/images/Elegant black and gold fountain pen.webp"
                 alt="Elegant fountain pen"
                 className="w-full h-auto rounded-2xl shadow-lg"
               />
@@ -140,7 +140,7 @@ export default function About() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <img src="/images/Wax seal stamp.png" alt="Wax seal stamp" className="w-full h-auto rounded-2xl shadow-lg" />
+              <img src="/images/Wax seal stamp.webp" alt="Wax seal stamp" className="w-full h-auto rounded-2xl shadow-lg" />
             </div>
             <div>
               <h2 className="font-playfair text-3xl md:text-4xl font-bold mb-6" style={{ color: '#3D1A1A' }}>

@@ -9,13 +9,13 @@ export default function Footer() {
       <div className="relative">
         {/* Gift box - left */}
         <img
-          src="/images/left.png"
+          src="/images/left.webp"
           alt=""
           className="absolute left-0 bottom-0 w-52 md:w-72 lg:w-96 object-contain pointer-events-none select-none"
         />
         {/* Gift box - right */}
         <img
-          src="/images/right-box.png"
+          src="/images/right-box.webp"
           alt=""
           className="absolute right-0 bottom-0 w-52 md:w-72 lg:w-96 object-contain pointer-events-none select-none"
         />

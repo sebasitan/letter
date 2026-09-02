@@ -26,7 +26,7 @@ function upsertLink(rel, href) {
   el.setAttribute('href', href)
 }
 
-export default function Seo({ title, description, path = '', image = '/images/hero.png' }) {
+export default function Seo({ title, description, path = '', image = '/images/hero.webp' }) {
   useEffect(() => {
     const fullTitle = title ? `${title} | ${SITE}` : `${SITE} — Handwritten Letters & Gifts, Bangalore`
     const url = BASE_URL + path

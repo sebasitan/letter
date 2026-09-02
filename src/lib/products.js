@@ -7,7 +7,7 @@ import { supabase } from './supabase'
 
 export const DEFAULT_LETTERS = [
   {
-    slug: 'love', name: 'Love Letter', price: 499, image: '/images/love.png', emoji: '❤️',
+    slug: 'love', name: 'Love Letter', price: 499, image: '/images/love.webp', emoji: '❤️',
     is_bestseller: false, sort_order: 1,
     description: 'Confession, anniversary, distance, or a proposal worth remembering forever.',
     tagline: "Pour your heart out — we'll turn it into words they'll keep forever.",
@@ -19,7 +19,7 @@ export const DEFAULT_LETTERS = [
     accent: { tint: '#FBE3DB', icon: '#B5593A', border: '#E2A18E', glow: 'rgba(181,89,58,0.25)' },
   },
   {
-    slug: 'healing', name: 'Healing / Breakup Letter', price: 599, image: '/images/healing.png', emoji: '🩹',
+    slug: 'healing', name: 'Healing / Breakup Letter', price: 599, image: '/images/healing.webp', emoji: '🩹',
     is_bestseller: false, sort_order: 2,
     description: 'Goodbye, closure, forgiveness, moving on — the words you need to say.',
     tagline: "Say what's been weighing on you. We'll help you find the words for closure.",
@@ -31,7 +31,7 @@ export const DEFAULT_LETTERS = [
     accent: { tint: '#E0ECE2', icon: '#5E7E66', border: '#A6C1AD', glow: 'rgba(94,126,102,0.25)' },
   },
   {
-    slug: 'birthday', name: 'Birthday Letter', price: 399, image: '/images/birthday-letter.png', emoji: '🎂',
+    slug: 'birthday', name: 'Birthday Letter', price: 399, image: '/images/birthday-letter.webp', emoji: '🎂',
     is_bestseller: false, sort_order: 3,
     description: 'Parents to child, best friend, or a milestone birthday made unforgettable.',
     tagline: 'Make their day unforgettable with words written just for them.',
@@ -43,7 +43,7 @@ export const DEFAULT_LETTERS = [
     accent: { tint: '#FAE7C6', icon: '#B98A1E', border: '#E0C275', glow: 'rgba(196,154,46,0.28)' },
   },
   {
-    slug: 'apology', name: 'Apology Letter', price: 499, image: '/images/apology.png', emoji: '💬',
+    slug: 'apology', name: 'Apology Letter', price: 499, image: '/images/apology.webp', emoji: '💬',
     is_bestseller: false, sort_order: 4,
     description: 'Sorry to a partner, family, or an old friend — sincerity, beautifully written.',
     tagline: 'Some things are hard to say. Let us help you say sorry, sincerely.',
@@ -55,7 +55,7 @@ export const DEFAULT_LETTERS = [
     accent: { tint: '#E1E8F0', icon: '#51708C', border: '#A6BCD0', glow: 'rgba(81,112,140,0.25)' },
   },
   {
-    slug: 'family', name: 'Family Letter', price: 599, image: '/images/family.png', emoji: '👨‍👩‍👧',
+    slug: 'family', name: 'Family Letter', price: 599, image: '/images/family.webp', emoji: '👨‍👩‍👧',
     is_bestseller: false, sort_order: 5,
     description: "Newborn, leaving home, Mother's Day, Father's Day — for the people who raised you.",
     tagline: "For the people who raised you, or the ones you're raising — words that last generations.",
@@ -67,7 +67,7 @@ export const DEFAULT_LETTERS = [
     accent: { tint: '#FBE4D2', icon: '#BE7048', border: '#E3B493', glow: 'rgba(190,112,72,0.25)' },
   },
   {
-    slug: 'mystery', name: 'Mystery Box', price: 1099, image: '/images/mystery.png', emoji: '🎁',
+    slug: 'mystery', name: 'Mystery Box', price: 1099, image: '/images/mystery.webp', emoji: '🎁',
     is_bestseller: true, sort_order: 6,
     description: 'We write the letter AND choose the gift. A total surprise, curated for them.',
     tagline: "Tell us about them — we'll write the letter AND choose the perfect gift.",
@@ -81,14 +81,14 @@ export const DEFAULT_LETTERS = [
 ]
 
 export const DEFAULT_GIFTS = [
-  { id: 'dried-flowers', name: 'Dried Flower Bouquet', description: 'Preserved blooms', price: 399, emoji: '🌸', image: '/images/gifts/dried-flowers.png', personalised: false, sort_order: 1 },
-  { id: 'candle', name: 'Scented Soy Candle', description: 'Warm vanilla glow', price: 349, emoji: '🕯️', image: '/images/gifts/candle.png', personalised: false, sort_order: 2 },
-  { id: 'chocolates', name: 'Premium Chocolates', description: 'Handpicked box', price: 299, emoji: '🍫', image: '/images/gifts/chocolates.png', personalised: false, sort_order: 3 },
-  { id: 'succulent', name: 'Mini Succulent', description: 'A living keepsake', price: 249, emoji: '🪴', image: '/images/gifts/succulent.png', personalised: false, sort_order: 4 },
-  { id: 'photo-frame', name: 'Photo Frame', description: 'Personalised • your photo framed', price: 499, emoji: '🖼️', image: '/images/gifts/photo-frame.png', personalised: true, personalisation_type: 'whatsapp', personalisation_label: "We'll ask for your photo on WhatsApp", sort_order: 5 },
-  { id: 'keychain', name: 'Name Keychain', description: 'Personalised • engraved name', price: 199, emoji: '🔑', image: '/images/gifts/keychain.png', personalised: true, personalisation_type: 'name', personalisation_label: 'Name to engrave', personalisation_max: 12, sort_order: 6 },
-  { id: 'bracelet', name: 'Minimalist Bracelet', description: 'Dainty & elegant', price: 399, emoji: '📿', image: '/images/gifts/bracelet.png', personalised: false, sort_order: 7 },
-  { id: 'song-plaque', name: 'Song Plaque', description: 'Personalised • scan to play', price: 449, emoji: '🎵', image: '/images/gifts/song-plaque.png', personalised: true, personalisation_type: 'name', personalisation_label: 'Song name and artist', personalisation_max: 40, sort_order: 8 },
+  { id: 'dried-flowers', name: 'Dried Flower Bouquet', description: 'Preserved blooms', price: 399, emoji: '🌸', image: '/images/gifts/dried-flowers.webp', personalised: false, sort_order: 1 },
+  { id: 'candle', name: 'Scented Soy Candle', description: 'Warm vanilla glow', price: 349, emoji: '🕯️', image: '/images/gifts/candle.webp', personalised: false, sort_order: 2 },
+  { id: 'chocolates', name: 'Premium Chocolates', description: 'Handpicked box', price: 299, emoji: '🍫', image: '/images/gifts/chocolates.webp', personalised: false, sort_order: 3 },
+  { id: 'succulent', name: 'Mini Succulent', description: 'A living keepsake', price: 249, emoji: '🪴', image: '/images/gifts/succulent.webp', personalised: false, sort_order: 4 },
+  { id: 'photo-frame', name: 'Photo Frame', description: 'Personalised • your photo framed', price: 499, emoji: '🖼️', image: '/images/gifts/photo-frame.webp', personalised: true, personalisation_type: 'whatsapp', personalisation_label: "We'll ask for your photo on WhatsApp", sort_order: 5 },
+  { id: 'keychain', name: 'Name Keychain', description: 'Personalised • engraved name', price: 199, emoji: '🔑', image: '/images/gifts/keychain.webp', personalised: true, personalisation_type: 'name', personalisation_label: 'Name to engrave', personalisation_max: 12, sort_order: 6 },
+  { id: 'bracelet', name: 'Minimalist Bracelet', description: 'Dainty & elegant', price: 399, emoji: '📿', image: '/images/gifts/bracelet.webp', personalised: false, sort_order: 7 },
+  { id: 'song-plaque', name: 'Song Plaque', description: 'Personalised • scan to play', price: 449, emoji: '🎵', image: '/images/gifts/song-plaque.webp', personalised: true, personalisation_type: 'name', personalisation_label: 'Song name and artist', personalisation_max: 40, sort_order: 8 },
 ]
 
 export const DEFAULT_PAPERS = [

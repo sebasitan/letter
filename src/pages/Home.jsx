@@ -236,7 +236,7 @@ function Hero() {
                   style={{ backgroundColor: '#F5EDE6' }}
                 >
                   <img
-                    src="/images/hero.png"
+                    src="/images/hero.webp"
                     alt="Handwritten letters with wax seal"
                     className="w-full h-auto"
                     style={{ backgroundColor: '#F5EDE6' }}
@@ -753,14 +753,14 @@ function CTA() {
       {/* Background Images */}
       <div className="absolute left-0 bottom-0 w-1/4 opacity-30">
         <img
-          src="/images/cta-gift-left.png"
+          src="/images/cta-gift-left.webp"
           alt=""
           className="w-full h-auto"
         />
       </div>
       <div className="absolute right-0 bottom-0 w-1/4 opacity-30">
         <img
-          src="/images/cta-gift-right.png"
+          src="/images/cta-gift-right.webp"
           alt=""
           className="w-full h-auto"
         />
