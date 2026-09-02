@@ -208,6 +208,15 @@ export default function OrderForm() {
       ? selectedGifts.reduce((sum, g) => sum + g.price * g.qty, 0)
       : (selectedTier?.price || 0)
 
+  // Personalised gifts are engraved or printed by someone else, so they
+  // can't go out the same day. One in the basket slows the WHOLE order:
+  // the letter and the gift ship together as a single parcel, which is
+  // the entire point of the product.
+  const hasPersonalised = formData.giftMode === 'choose' && selectedGifts.some(g => g.personalised)
+  const deliveryPromise = hasPersonalised
+    ? 'Personalised gift — delivered in 3–4 days'
+    : 'Same-day delivery across Bangalore'
+
   const selectedPaper = paperTypes.find(p => p.id === formData.paperType)
   const selectedInk = inkColors.find(i => i.id === formData.inkColor)
   const extrasTotal = (selectedPaper?.price || 0) + (selectedInk?.price || 0)
@@ -461,7 +470,12 @@ export default function OrderForm() {
               </li>
               <li className="flex gap-2.5">
                 <span className="font-bold" style={{ color: '#9D4433' }}>4.</span>
-                <span>We hand-write it in calligraphy, wax seal it, and deliver.</span>
+                <span>
+                  We hand-write it in calligraphy, wax seal it, and deliver
+                  {hasPersonalised
+                    ? <> — <strong>3–4 days</strong>, as your gift has to be engraved first.</>
+                    : <> — <strong>same day</strong> across Bangalore.</>}
+                </span>
               </li>
             </ol>
           </div>
@@ -967,7 +981,11 @@ export default function OrderForm() {
                                 </div>
                                 <span className="font-semibold text-xs block leading-tight" style={{ color: '#3D1A1A' }}>{gift.name}</span>
                                 <span className="text-[10px] block leading-tight mb-1" style={{ color: '#A8968C' }}>{gift.desc}</span>
-                                <span className="text-sm font-bold block mb-2" style={{ color: '#C49A2E' }}>+₹{gift.price}</span>
+                                <span className="text-sm font-bold block" style={{ color: '#C49A2E' }}>+₹{gift.price}</span>
+                                {/* Said before they choose, not after they've paid */}
+                                <span className="text-[10px] block leading-tight mb-2" style={{ color: gift.personalised ? '#9D4433' : 'transparent' }}>
+                                  {gift.personalised ? '⏱ 3–4 days' : '·'}
+                                </span>
 
                                 {/* Add button / quantity stepper */}
                                 {active ? (
@@ -998,6 +1016,23 @@ export default function OrderForm() {
                             )
                           })}
                         </div>
+
+                        {hasPersonalised && (
+                          <div className="rounded-xl p-4 mt-4 flex items-start gap-3" style={{ backgroundColor: '#FDF5E6', border: '1px solid #EBD9A8' }}>
+                            <span className="text-base leading-none mt-0.5">⏱</span>
+                            <div>
+                              <p className="text-sm font-semibold" style={{ color: '#8A6A16' }}>
+                                This order takes 3–4 days
+                              </p>
+                              <p className="text-xs mt-1" style={{ color: '#5C3A2E' }}>
+                                {selectedGifts.filter(g => g.personalised).map(g => g.name).join(', ')}
+                                {' '}has to be engraved before it can be packed, so this one can't go
+                                out the same day. Your letter travels with it — we send everything in
+                                one parcel rather than splitting the surprise.
+                              </p>
+                            </div>
+                          </div>
+                        )}
                       </>
                     )}
                   </div>
@@ -1272,7 +1307,7 @@ export default function OrderForm() {
                       { icon: '✍️', text: '100% hand-written on premium paper' },
                       { icon: '🔒', text: 'Private & personal — your words stay yours' },
                       { icon: '🔁', text: 'One free revision included' },
-                      { icon: '🚚', text: 'Same-day delivery across Bangalore' },
+                      { icon: '🚚', text: deliveryPromise },
                     ].map((item) => (
                       <li key={item.text} className="flex items-start gap-3 text-sm" style={{ color: '#5C3A2E' }}>
                         <span className="text-base leading-none">{item.icon}</span>
